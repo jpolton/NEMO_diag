@@ -13,86 +13,84 @@ import matplotlib.cm as cm  # colormaps
 import sys # Exit command
 #####%matplotlib inline
 
-def plot_gauges(config):
+#flag = 0 # Read output.abort
+#flag = 1 # Read SWPacific*nc
+#flag = 2 # bdydta mask
+#flag = 3 # Tide data
+flag = 4 # grid T data
 
-	if config == SWPacific:
-		pass	
-		#plt.plot()
+dir = ''
+dir = '/work/n01/n01/jelt/NEMO/NEMOGCM_jdha/dev_r4621_NOC4_BDY_VERT_INTERP/NEMOGCM/CONFIG/XIOS_AMM60_nemo_harmPOLCOMS/EXP00/OUTPUT/'
+#dir = '/Users/jeff/Desktop/temp/'
 
+print 'flag =',flag
 
-## Now do the main routine stuff
-if __name__ == '__main__':
-
-
-  #config = 'SWPacific'
-  config = 'SEAsia'
-
-  #flag = 0 # Read output.abort
-  flag = 1 # Read SWPacific*nc
-  #flag = 2 # bdydta mask
-  #flag = 3 # Tide data
-
-  print 'flag =',flag
-
-  # Set path
-  dirname = ''#/Users/jeff/Desktop/'
-  if flag == 0:
+# Set path
+dirname = ''#/Users/jeff/Desktop/'
+if flag == 0:
 	filename = dirname + 'output.abort.nc'
 	var = 'sossheig'
-  elif flag == 1:
-	#filename = config + '_1h_20000101_20000110_SSH.nc'
-	#filename = config + '_1h_20000101_20000120_SSH.nc'
-	filename = config + '_5d_20000302_20000430_grid_T.nc' # '_5d_20000102_20000131_grid_T.nc' # '_1h_20000102_20000111_SSH.nc'  #20000101_20000101_SSH.nc'
-	#filename = config + '_1h_20000101_20000130_SSH.nc'
+elif flag == 1:
+	#filename = 'SWPacific_1h_20000101_20000110_SSH.nc'
+	filename = 'SWPacific_1h_20000101_20000120_SSH.nc'
+	#filename = 'SWPacific_1h_20000101_20000130_SSH.nc'
         filename = dirname + filename
 	var = 'zos'
-  elif flag == 2:
-        filename = '/work/n01/n01/jelt/' + config + '/INPUTS/' + config + '_bdytide_rotT_M2_grid_T.nc'
+elif flag == 2:
+        filename = '/work/n01/n01/jelt/SWPacific/INPUTS/SWPacific_bdytide_rotT_M2_grid_T.nc'
 	var = 'bdy_msk'
-  elif flag == 3: # Tides
-	filename = config + '_5d_20000101_20000120_Tides.nc'
+elif flag == 3: # Tides
+	filename = 'SWPacific_5d_20000101_20000120_Tides.nc'
 	var = 'M2x'
-  else:
+elif flag == 4: # grid_T
+	filename = 'AMM60_1d_20120601_20120602_grid_T.nc'
+	var = 'temper25h'
+	var = 'e3t'
+else:
 	print 'Panic!'
 
-  ## Load file and variables
-  f = Dataset(filename)
+## Load file and variables
+f = Dataset(dir+filename)
 
-  #load lat and lon
-  #nav_lat = f.variables['nav_lat'][:] # (y,x)
-  #nav_lon = f.variables['nav_lon'][:] # (y,x)
-  zos = f.variables[var][:].squeeze() # (time_counter, y, x)
-  lim = np.nanmax(np.abs(zos[:])) # Find extrema
-  print 'max abs(lim)=',lim
-  print 'shape zos=',np.shape(zos)
+#load lat and lon
+#nav_lat = f.variables['nav_lat'][:] # (y,x)
+#nav_lon = f.variables['nav_lon'][:] # (y,x)
+zos = f.variables[var][:].squeeze() # (time_counter, y, x)
+lim = np.nanmax(np.abs(zos[:])) # Find extrema
+print 'max abs(lim)=',lim
+print 'shape zos=',np.shape(zos)
 
-  # Plot data
-  cmap = cm.Spectral
-  fig = plt.figure()
-  plt.rcParams['figure.figsize'] = (10.0, 10.0)
+# Plot data
+cmap = cm.Spectral
+fig = plt.figure()
+plt.rcParams['figure.figsize'] = (10.0, 10.0)
 
-  ax = fig.add_subplot(211)
-  if flag == 0 or flag == 2 or flag == 3:
+ax = fig.add_subplot(211)
+if flag == 0 or flag == 2 or flag == 3:
 	plt.pcolormesh( zos[:,:], cmap=cmap )
-  elif flag == 1:
+elif flag == 1:
 	plt.pcolormesh( zos[-2,:,:], cmap=cmap )
-  plt.clim([-lim/10.,lim/10.])
-  plt.colorbar()
-  ax = fig.add_subplot(212)
-  if flag == 0 or flag ==2:
+elif flag == 4:
+	plt.pcolormesh( zos[1,1,:,:], cmap=cmap )
+#plt.clim([-lim/10.,lim/10.])
+plt.colorbar()
+ax = fig.add_subplot(212)
+if flag == 0 or flag ==2:
 	plt.pcolormesh( zos[:,:], cmap=cmap )
-  elif flag == 1:
+elif flag == 1:
 	plt.pcolormesh( zos[-2,:,:], cmap=cmap )
-  plt.xlim([528,548])
-  plt.ylim([366,386])
-  plt.clim([-lim,lim])
-  plt.colorbar()
-  plt.title('SSH')
-  #plt.xlabel('long'); plt.ylabel('lat')
-  plt.show()
+elif flag == 4:
+	plt.pcolormesh( zos[1,1,:,:], cmap=cmap )
+plt.xlim([528,548])
+plt.ylim([366,386])
+#plt.clim([-lim,lim])
+plt.colorbar()
+plt.title(var)
+#plt.xlabel('long'); plt.ylabel('lat')
+plt.show()
 
 
-  sys.exit("End script")
+sys.exit("End script")
 
 ###############################################################################
 ###############################################################################
