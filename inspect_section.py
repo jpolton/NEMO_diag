@@ -206,12 +206,15 @@ if __name__ == '__main__':
   #file_var = '/work/n01/n01/jelt/SEAsia/trunk_NEMOGCM_r8395/CONFIG/SEAsia/EXP_tide_initcd/domain_cfg.nc'
   #varstr ='stiffness'
 
-  fig = plot_zgr(file_cfg,file_bth,file_var,varstr,np.arange(553,554,1),np.arange(540,553,1),50,1450)
+  fig = plot_zgr(file_cfg,file_bth,file_var,varstr,np.arange(588,589,1),np.arange(140,160,1),50,1450)
 
 
 
   fname = 'test.png'
   plt.savefig(fname) 
+
+
+  
   sys.exit("End script")
 
 ###############################################################################

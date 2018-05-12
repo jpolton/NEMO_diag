@@ -151,7 +151,7 @@ def plot_section_panel(X,Z,var,ylims,xlims,clims,cmap,tstr,ystr,ipanel):
     plot_section_panel(grid_sec1,bath_sec1,np.log10(var1_sec1),[200,10],[ min(lons1), max(lons1)],[-6,-3],cmap, lab1+':log10(N2)','depth (m)',411)
     """
     ax = fig.add_subplot(ipanel)
-    plt.pcolormesh(X, Z, var, cmap=cmap)
+    plt.pcolormesh(X, Z, var, cmap=cmap, edgecolor='k', linewidth=1)
     plt.ylim(ylims)
     plt.xlim(xlims)
     plt.title(tstr)
@@ -235,14 +235,16 @@ if __name__ == '__main__':
  #[lats_sec, lons_sec, dep_sec, var_sec] = extract_depthsection( nav_lat, nav_lon, gdepw, var, lats_endpts, lons_endpts, units='deg' )
 
  lats_endpts = [140,160]
- lons_endpts = [588,588]
+ lons_endpts = [587,587]
  [ny,nx] = np.shape(nav_lon)
  nav_lon = np.tile(np.arange(0,nx),  (ny,1))
  nav_lat = np.tile(np.arange(0,ny).T,(nx,1)).T
 
 
 
-
+ fig = plt.figure()
+ plt.rcParams['figure.figsize'] = (25.0, 25.0)
+ 
 
  # Plot sections
  ################
@@ -263,19 +265,86 @@ if __name__ == '__main__':
 
  # Section 1
  ##############
- #fig = plt.figure()
- #plt.rcParams['figure.figsize'] = (15.0, 15.0)
 
  [lats_sec, lons_sec, dep_sec, var_sec] = extract_depthsection( nav_lat, nav_lon, gdepw, var1, lats_endpts, lons_endpts, units='ind' )
  
- plot_section_panel(lats_sec,np.log10(dep_sec),var_sec,np.log10([5000,10]),[ min(lats_endpts), max(lats_endpts)],[np.min(var_sec),np.max(var_sec)],cmap, varstr1,'depth (m)',312)
+ plot_section_panel(lats_sec,np.log10(dep_sec),var_sec,np.log10([5000,10]),[ min(lats_endpts), max(lats_endpts)],[np.min(var_sec),np.max(var_sec)],cmap, varstr1,'depth (m)',132)
 
  [lats_sec, lons_sec, dep_sec, var_sec] = extract_depthsection( nav_lat, nav_lon, gdepw, var2, lats_endpts, lons_endpts, units='ind' )
  
- plot_section_panel(lats_sec,np.log10(dep_sec),var_sec,np.log10([5000,10]),lats_endpts,[30,np.max(var_sec)],cmap, varstr2,'depth (m)',313)
+ plot_section_panel(lats_sec,np.log10(dep_sec),var_sec,np.log10([5000,10]),lats_endpts,[34,np.max(var_sec)],cmap, varstr2,'depth (m)',133)
 
  ## Save output
  fname = 'section_'+f_var.replace('.nc','').replace('.','-')+'.png'
  plt.savefig(fname)
 
+
+
+ # Repeat for parent grid
+ ########################
+
+
+ # directory
+ dir = '/work/n01/n01/jelt/SEAsia/INPUTS/'
+ # Configuration File
+ f_cfg = 'initcd_depth.nc'
+
+ # Variable File and name
+ #f_var = 'votemper_ORCA0083-N01-SEAsia_1978.nc'
+ f_var = 'initcd_votemper.nc'
+ varstr1 = 'votemper'
+ #f_var2 = 'vosaline_ORCA0083-N01-SEAsia_1978.nc'
+ f_var2 = 'initcd_vosaline.nc'
+ varstr2 = 'vosaline'
+
+ # read in variable
+
+ rootgrp = Dataset(dir+f_cfg, "r", format="NETCDF4")
+ gdept   = np.squeeze(rootgrp.variables['gdept_3D'][:])
+ rootgrp.close()
+
+ rootgrp = Dataset(dir+f_var, "r", format="NETCDF4")
+ var1   = np.squeeze(rootgrp.variables[varstr1][:])
+ nav_lon = np.squeeze(rootgrp.variables['x'][:])
+ nav_lat = np.squeeze(rootgrp.variables['y'][:])
+ rootgrp.close()
+
+ rootgrp = Dataset(dir+f_var2, "r", format="NETCDF4")
+ var2   = np.squeeze(rootgrp.variables[varstr2][:])
+ rootgrp.close()
+
+
+ lats_endpts = [140,160]
+ lons_endpts = [587,587]
+ [ny,nx] = np.shape(nav_lon)
+ nav_lon = np.tile(np.arange(0,nx),  (ny,1))
+ nav_lat = np.tile(np.arange(0,ny).T,(nx,1)).T
+
+ # Plot sections
+ ################
+ fig = plt.figure()
+ plt.rcParams['figure.figsize'] = (15.0, 15.0)
+ ax = fig.add_subplot(3,3,1)
+ plt.contourf( nav_lon, nav_lat, bathy, levels=[10,100, 200, 1000, 5000])
+ plt.plot( lons_endpts, lats_endpts, 'k')
+
+ #cmap = cm.jet
+ cmap = cm.Spectral_r
+ cmap.set_bad('white',1.)
+ cmap.set_over('red',1.)
+
+ # Section 1
+ ##############
+
+ [lats_sec, lons_sec, dep_sec, var_sec] = extract_depthsection( nav_lat, nav_lon, gdept, var1, lats_endpts, lons_endpts, units='ind' )
+
+ plot_section_panel(lats_sec,np.log10(dep_sec),var_sec,np.log10([5000,10]),[ min(lats_endpts), max(lats_endpts)],[np.min(var_sec),np.max(var_sec)],cmap, varstr1,'depth (m)',132)
+
+ [lats_sec, lons_sec, dep_sec, var_sec] = extract_depthsection( nav_lat, nav_lon, gdept, var2, lats_endpts, lons_endpts, units='ind' )
+
+ plot_section_panel(lats_sec,np.log10(dep_sec),var_sec,np.log10([5000,10]),lats_endpts,[34,np.max(var_sec)],cmap, varstr2,'depth (m)',133)
+
+ ## Save output
+ fname = 'section_'+f_var.replace('.nc','').replace('.','-')+'.png'
+ plt.savefig(fname)
 
