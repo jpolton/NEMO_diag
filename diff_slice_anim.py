@@ -38,17 +38,20 @@ import datetime
 
 #ifile1 = sys.argv[1]
 #ifile2 = sys.argv[2]
-rootdir = "/Users/jeff/Desktop/OneWeekExpiry/SEAsia/"
-ifile1 = "OUTPUT_FULL2_SPEC/SEAsia_1d_19791101_19791130_grid_T.nc"
+#rootdir = "/Users/jeff/Desktop/OneWeekExpiry/SEAsia/"
+rootdir = "/work/n01/n01/jdha/2018/SEAsia/EXP_openbcs/"
+ifile1 = "OUTPUT_SPLIT_NONE/SEAsia_1d_19791101_19791130_grid_T.nc"
 ifile2 = "OUTPUT_FULL2_NONE/SEAsia_1d_19791101_19791130_grid_T.nc"
 
 variable = 'sea_surface_temperature'
-
-dc = 1
-levs = np.arange(20,30+dc,dc)
+ofile = 'FIGURES/SEAsia_SST_slice.gif'
+levs = np.arange(20,30+1,1)
 #levs = [-1.5,-1,-0.5,0,0.5,1,1.5]
     
-ofile = 'FIGURES/SEAsia_slice.gif'
+variable = 'zos'
+ofile = 'FIGURES/SEAsia_SSH_slice.gif'
+levs = np.arange(-2,2+0.1,0.1)
+
 
 f1 = Dataset(rootdir + ifile1)
 f2 = Dataset(rootdir + ifile2)
@@ -181,7 +184,8 @@ if __name__ == '__main__':
        
  
         #plt.show() # Can not save to file with this command present
-        fname = rootdir+ifile1.replace('.nc','_'+str(count).zfill(4)+'.png')
+        #fname = rootdir+ifile1.replace('.nc','_'+str(count).zfill(4)+'.png')
+        fname = ofile.replace('.gif','_'+str(count).zfill(4)+'.png')
 
         plt.savefig(fname, dpi=100)
         files.append(fname)
