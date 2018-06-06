@@ -7,7 +7,7 @@ Build 2D animation of two 2D arrays and their difference.
 E.g. SSH_1, SSH_2 and SSH_1 - SSH_2
 
 ** Useage: **
-diff_slice_anim.py ifile1 ifile2 var ofile
+Aspirational usage (maybe) diff_slice_anim.py ifile1 ifile2 var ofile
 
 ** origin: ** AMM60_SSH_anim.py
 
@@ -18,17 +18,17 @@ diff_slice_anim.py ifile1 ifile2 var ofile
 
 
 ** Issues: **
-* The longitude label is missing from the final plots
+* Automate the colour / contour scales 
+* Generalise the slice extraction. E.g. over x,y,z not just time.
+
 """
 
 from netCDF4 import Dataset
 import numpy as np
 import matplotlib.pyplot as plt  # plotting
 import sys
-sys.path.append('../jcomp_tools_dev/') # Add the directory with the amm60_data_tools.py file to path. Not used on the NOCL SAN
+#sys.path.append('../jcomp_tools_dev/') # Add the directory with the amm60_data_tools.py file to path. Not used on the NOCL SAN
 from AMM60_tools import NEMO_fancy_datestr # NEMO date strings
-from mpl_toolkits.mplot3d import Axes3D # 3d plotting
-from itertools import product, combinations # plotting 3d frame
 import os #, sys  # removing files and building animation
 import datetime
 ##%matplotlib inline
@@ -40,17 +40,24 @@ import datetime
 #ifile2 = sys.argv[2]
 #rootdir = "/Users/jeff/Desktop/OneWeekExpiry/SEAsia/"
 rootdir = "/work/n01/n01/jdha/2018/SEAsia/EXP_openbcs/"
-ifile1 = "OUTPUT_SPLIT_NONE/SEAsia_1d_19791101_19791130_grid_T.nc"
-ifile2 = "OUTPUT_FULL2_NONE/SEAsia_1d_19791101_19791130_grid_T.nc"
+#ifile1 = "OUTPUT_SPLIT_NONE/SEAsia_1d_19791101_19791130_grid_T.nc"
+#ifile2 = "OUTPUT_FULL2_NONE/SEAsia_1d_19791101_19791130_grid_T.nc"
+
+EXPa = "EXP4"
+EXPb = "EXP5"
+
+ifile1 = "OUTPUT_" + EXPa + "/SEAsia_1d_19791101_19791130_grid_T.nc"
+ifile2 = "OUTPUT_" + EXPb + "/SEAsia_1d_19791101_19791130_grid_T.nc"
 
 variable = 'sea_surface_temperature'
-ofile = 'FIGURES/SEAsia_SST_slice.gif'
+
+ofile = 'FIGURES/SEAsia_' + EXPa + '_' + EXPb + '_' + variable + '_slice.gif'
 levs = np.arange(20,30+1,1)
 #levs = [-1.5,-1,-0.5,0,0.5,1,1.5]
     
-variable = 'zos'
-ofile = 'FIGURES/SEAsia_SSH_slice.gif'
-levs = np.arange(-2,2+0.1,0.1)
+#variable = 'zos'
+#ofile = 'FIGURES/SEAsia_EXP4_EXP5_SSH_slice.gif'
+#levs = np.arange(-2,2+0.1,0.1)
 
 
 f1 = Dataset(rootdir + ifile1)
