@@ -58,6 +58,7 @@ xlim = [75,135]
 ylim = [-20.,20.]
 levs = np.arange(-2,2+0.1,0.1)
 
+ofile = 'FIGURES/SEAsia_SSH.gif'
 
 
 
@@ -189,7 +190,7 @@ if __name__ == '__main__':
 
 
     # Make the animated gif and clean up the files
-    make_gif(files,'SEAsia_SSH.gif',delay=20)
+    make_gif(files,ofile,delay=20)
 
     for f in files:
         os.remove(f)
