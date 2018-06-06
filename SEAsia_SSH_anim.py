@@ -126,7 +126,7 @@ def sliceplotshade(X,Y,var,count,xlim,ylim,levs):
     ax.set_ylabel('\nlatitude (deg)')
     cset.set_clim([levs[0],levs[-1]])
     ax.hold(True)
-    cs = ax.contour(X, Y, var[count,:,:], levels=levs, colors='k')
+    #cs = ax.contour(X, Y, var[count,:,:], levels=levs, colors='k')
 
     fig.colorbar(cset) # Add colorbar
     adjustFigAspect(fig,aspect=(xlim[1]-xlim[0])/(ylim[1]-ylim[0]))
