@@ -167,7 +167,7 @@ if __name__ == '__main__':
 
     print 'Hardwired timestep in variable dat'
     ## Time timeseries of frames
-    for count in range(1,5):
+    for count in range(nt-25,nt):
         print count
 
         # Plot SST map
