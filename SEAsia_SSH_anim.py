@@ -80,7 +80,7 @@ nav_lon = f.variables['nav_lon'][:] # (y,x)
 # Process the time data
 ################################
 # Note that the Error flag doesn't work and I haven't actually checked it. What happens with leap years etc...
-#[time_str, time_datetime, flag_err] = NEMO_fancy_datestr( time_counter, time_origin ) # internal tide data
+[time_str, time_datetime, flag_err] = NEMO_fancy_datestr( time_counter, time_origin ) # internal tide data
 
 
 
