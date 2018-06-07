@@ -36,6 +36,11 @@ import datetime
 
 ## Read in the input parameters
 
+vtype = 'ssh'
+#vtype = 'sst'
+#vtype = 'ssu'
+#vtype = 'ssv'
+
 #ifile1 = sys.argv[1]
 #ifile2 = sys.argv[2]
 #rootdir = "/Users/jeff/Desktop/OneWeekExpiry/SEAsia/"
@@ -44,7 +49,7 @@ rootdir = "/work/n01/n01/jdha/2018/SEAsia/EXP_openbcs/"
 #ifile2 = "OUTPUT_FULL2_NONE/SEAsia_1d_19791101_19791130_grid_T.nc"
 
 EXPa = "EXP4"
-EXPb = "EXP5"
+EXPb = "EXP3"
 
 ifile1 = "OUTPUT_" + EXPa + "/SEAsia_1d_19791101_19791130_grid_T.nc"
 ifile2 = "OUTPUT_" + EXPb + "/SEAsia_1d_19791101_19791130_grid_T.nc"
