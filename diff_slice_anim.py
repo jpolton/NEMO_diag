@@ -37,10 +37,10 @@ import datetime
 
 ## Read in the input parameters
 
-#vtype = 'ssh'
+vtype = 'ssh'
 #vtype = 'sst'
 #vtype = 'ssu'
-vtype = 'ssv'
+#vtype = 'ssv'
 
 #ifile1 = sys.argv[1]
 #ifile2 = sys.argv[2]
@@ -51,7 +51,7 @@ rootdir = "/scratch/jdha/SEAsia/"
 #ifile2 = "OUTPUT_FULL2_NONE/SEAsia_1d_19791101_19791130_grid_T.nc"
 
 EXPa = "EXP4"
-EXPb = "EXP5"
+EXPb = "EXP3"
 
 freq = '5d'
 if vtype == 'ssh':
