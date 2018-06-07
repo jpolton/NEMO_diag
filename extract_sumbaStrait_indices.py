@@ -1,4 +1,3 @@
-
 #extract_sumbaStrait_indices.py
 
 """
