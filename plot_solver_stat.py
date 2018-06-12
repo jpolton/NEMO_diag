@@ -128,6 +128,6 @@ plt.xlabel('simulation time (days)')
 
 #plt.show()
 
-fname = CN_EXP+'_solverStat_'+str(NN_IT000)+'_'+str(NN_ITEND)+'.png'
+fname = str(CN_EXP)+'_solverStat_'+str(NN_IT000)+'_'+str(NN_ITEND)+'.png'
 
 plt.savefig(fname)
