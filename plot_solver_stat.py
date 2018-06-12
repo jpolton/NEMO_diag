@@ -102,6 +102,9 @@ for index in range(3,ncol):
 ################################################################################
 
 rn_rdt = extract_namelist_variable('rn_rdt', dir + 'output.namelist.dyn')
+NN_IT000 = extract_namelist_variable('NN_IT000', dir + 'output.namelist.dyn')
+NN_ITEND = extract_namelist_variable('NN_ITEND', dir + 'output.namelist.dyn')
+CN_EXP = extract_namelist_variable('CN_EXP', dir + 'output.namelist.dyn')
 
 ################################################################################
 ## Plot time series
@@ -122,5 +125,5 @@ plt.xlabel('simulation time (days)')
 
 #plt.show()
 
-fname = 'hpg_error_timeseries_'+config+'.png'
+fname = CN_EXP+'_solverStat_'+str(NN_IT000)+'_'+str(NN_ITEND)+'.png'
 plt.savefig(fname)
