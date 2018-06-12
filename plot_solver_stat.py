@@ -22,30 +22,37 @@ nrow,ncol = data.shape
 
 """
 
-def extract_namelist_variable(varname, filename='output.namelist.dyn'):
+def extract_namelist_variable(varname, type, filename='output.namelist.dyn'):
     """
     Extract variable value from output.namelist.dyn
     inputs:
         varname  - name of variable in file, case insensitive [str]
+        type     - ['float'/'str'] string to determine output format [str]
         filename - name of file [str]
     outputs:
-        val - value for varname [float]
+        val - value for varname [float/str]
         
     Usage:
-        rn_rdt = extract_namelist_variable('rn_rdt','/Users/jeff/Desktop/output.namelist.dyn')
+        rn_rdt = extract_namelist_variable('rn_rdt','float','/Users/jeff/Desktop/output.namelist.dyn')
     """
 
     err_occur = []                         # The list where we will store results.
-    substr = "rn_rdt"                        # Substring to use for search.
     try:                              # Try to:
         with open (filename, 'rt') as in_file:        # open file for reading text.
             for linenum, line in enumerate(in_file):    # Keep track of line numbers
-                if line.lower().find(substr) != -1: #If case-insensitive substring search matches, then:
-                    err_occur.append((linenum, line.rstrip('\n'))) # strip linebreaks, store line and line number in list as tuple.
-            for linenum, line in err_occur:              # Iterate over the list of tuples, and
-                print("Line ", linenum )  # , ": ", line)  # print results as "Line [linenum]: [line]".
-                value = float(re.sub("[^0-9.]", "",line))
-                print(substr +" : ", value )
+                if line.lower().find(varname) != -1: #If case-insensitive substring search matches, then:
+                    if type == 'float':
+                        value = float(re.sub("[^0-9.]", "",line))
+                    elif type == 'str':
+                        value = str(re.sub(varname.upper(), "",line)).replace('=','').rstrip('\n').lstrip().strip()
+                    else:
+                        print("not ready for that variable type")
+                        value = "NaN"
+#                    err_occur.append((linenum, line.rstrip('\n'))) # strip linebreaks, store line and line number in list as tuple.
+#            for linenum, line in err_occur:              # Iterate over the list of tuples, and
+#                print("Line ", linenum )  # , ": ", line)  # print results as "Line [linenum]: [line]".
+#                value = float(re.sub("[^0-9.]", "",line))
+                    print(varname +" : ", value )
     except ValueError:                   # If log file not found,
         print("Log file not found.")                # print an error message.
         
@@ -104,11 +111,11 @@ for index in range(3,ncol):
 ################################################################################
 ################################################################################
 
-rn_rdt = extract_namelist_variable('rn_rdt', dir + 'output.namelist.dyn')
-NN_IT000 = extract_namelist_variable('NN_IT000', dir + 'output.namelist.dyn')
-NN_ITEND = extract_namelist_variable('NN_ITEND', dir + 'output.namelist.dyn')
-CN_EXP = extract_namelist_variable('CN_EXP', dir + 'output.namelist.dyn')
 
+NN_IT000 = extract_namelist_variable('nn_it000', 'float', dir + 'output.namelist.dyn')
+NN_ITEND = extract_namelist_variable('nn_itend', 'float', dir + 'output.namelist.dyn')
+CN_EXP = extract_namelist_variable('cn_exp', 'str', dir + 'output.namelist.dyn')
+rn_rdt = extract_namelist_variable('rn_rdt', 'float', dir + 'output.namelist.dyn')
 ################################################################################
 ## Plot time series
 ################################################################################
