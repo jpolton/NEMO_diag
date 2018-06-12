@@ -16,8 +16,10 @@ nrow,ncol = data.shape
 
 """
  head solver.stat
- it :       1 ssh2:  0.1400401715067860D-03 Umax:  0.2582854442058599D-03 Smin:  0.3404606704631556D+02
- it :       2 ssh2:  0.3541085792571205D-03 Umax:  0.5169316099832227D-03 Smin:  0.3404604024385377D+02
+ it :       1 ssh2:  0.1400401715067860D-03 vel2max:  0.2582854442058599D-03 SSSmin:  0.3404606704631556D+02
+ it :       2 ssh2:  0.3541085792571205D-03 vel2max:  0.5169316099832227D-03 SSSmin:  0.3404604024385377D+02
+ it :       3 ssh2:  0.3772081008463699D+02 vel2max:  0.1150639058425675D-02 SSSmin:  0.3046908760191205D+02
+
 """
 
 def extract_namelist_variable(varname, filename='output.namelist.dyn'):
@@ -57,8 +59,9 @@ nrow,ncol = data.shape
 
 """
  head solver.stat
- it :       1 ssh2:  0.1400401715067860D-03 Umax:  0.2582854442058599D-03 Smin:  0.3404606704631556D+02
- it :       2 ssh2:  0.3541085792571205D-03 Umax:  0.5169316099832227D-03 Smin:  0.3404604024385377D+02
+ it :       1 ssh2:  0.1400401715067860D-03 vel2max:  0.2582854442058599D-03 SSSmin:  0.3404606704631556D+02
+ it :       2 ssh2:  0.3541085792571205D-03 vel2max:  0.5169316099832227D-03 SSSmin:  0.3404604024385377D+02
+ it :       3 ssh2:  0.3772081008463699D+02 vel2max:  0.1150639058425675D-02 SSSmin:  0.3046908760191205D+02
 """
 # Extract the data from the columns
 
@@ -88,10 +91,10 @@ def floatval(datacol,nrow):
 
 count = np.array([float(data[2][x]) for x in range(nrow)])
 for index in range(3,ncol):
-    if 'Umax' in data[index][0]:
+    if 'vel2max' in data[index][0]:
         print 'Processing Umax'
         umax = floatval( data[index+1],nrow)
-    elif 'Smin' in data[index][0]:
+    elif 'SSSmin' in data[index][0]:
         print 'Processing Smin'
         smin = floatval( data[index+1],nrow)
     elif 'ssh2' in data[index][0]:
@@ -111,11 +114,11 @@ CN_EXP = extract_namelist_variable('CN_EXP', dir + 'output.namelist.dyn')
 ################################################################################
 plt.subplot(3,1,1)
 plt.plot(count*rn_rdt/3600./24,  smin, color='r')
-plt.ylabel('Smin')
+plt.ylabel('SSSmin')
 
 plt.subplot(3,1,2)
 plt.plot(count*rn_rdt/3600./24,  umax, color='b')
-plt.ylabel('umax')
+plt.ylabel('vel2max')
 
 plt.subplot(3,1,3)
 plt.plot(count*rn_rdt/3600./24,  ssh2, color='g')
@@ -126,4 +129,5 @@ plt.xlabel('simulation time (days)')
 #plt.show()
 
 fname = CN_EXP+'_solverStat_'+str(NN_IT000)+'_'+str(NN_ITEND)+'.png'
+
 plt.savefig(fname)
