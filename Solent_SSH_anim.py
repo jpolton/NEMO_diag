@@ -62,6 +62,7 @@ elif key_variable == 'speed':
     ofile = 'FIGURES/'+config+'_speed.gif'
     levs = np.arange(-3,3+0.5,0.5)
     spacing = 150 # grid spacing between vectors
+    speed_min = 0.1 # Min speed to show vector
 else:
     print "Not ready for that eventuality"
 
@@ -88,9 +89,11 @@ sV = v / speed
 mask = ((np.sum(zos[0:3,:,:], axis=0)) == 0) # water=True, land=False
 zos = np.ma.masked_where(np.tile(mask,(nt,1,1)), zos)
 speed = np.ma.masked_where(np.tile(mask,(nt,1,1)), speed)
+sU = np.ma.masked_where( speed < speed_min, sU)
+sV = np.ma.masked_where( speed < speed_min, sV)
+
 #mask = (np.isnan(zos))
 #zos = np.ma.array( zos, mask = mask )
-
 
 
 
@@ -215,8 +218,8 @@ if __name__ == '__main__':
     files = []
 
     ## Time timeseries of frames
-    for count in range(3):
-    #for count in range(nt-8):  # By eye this looks like a closed cycle
+    #for count in range(3):
+    for count in range(nt-8):  # By eye this looks like a closed cycle
         print count
 
         # Plot SST map
