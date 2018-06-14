@@ -48,16 +48,16 @@ if str('livmap') in socket.gethostname().lower():
 elif str('livljobs') in socket.gethostname().lower():
     dirname = '/scratch/jelt/tmp/'
 elif str('eslogin') in socket.gethostname().lower():
-    dirname = '/work/n01/n01/jelt/Solent_surge/dev_r8814_surge_modelling_Nemo4/CONFIG/Solent_surge/EXP_TPXO/'
+    dirname = '/work/n01/n01/jelt/Solent_surge/dev_r8814_surge_modelling_Nemo4/CONFIG/Solent_surge/EXP_FES/'
 else:
     print 'There is no working ELSE option'
 
 #################### USR PARAMETERS ##########################
 
 #dirname  = '/work/n01/n01/jelt/Solent_surge/dev_r8814_surge_modelling_Nemo4/CONFIG/Solent_surge/EXP_TPXO/'
-filename = 'Solent_surge_TPXO_5mi_20130101_20130101_5min.nc'
+filename = 'Solent_surge_FES_5mi_20130101_20130101_5min.nc'
 levs     = np.arange(-2.5,2.5+0.1,0.1)
-ofile    = 'FIGURES/Solent_SSH.gif'
+ofile    = 'FIGURES/Solent_FES_SSH.gif'
 
 index_Buoys = [ [-200,700], [200,200], ]  ## Index iLon, iLat of each gauge point to extract time series
 out_every   = 1                          ## Generate graphic every X time step
