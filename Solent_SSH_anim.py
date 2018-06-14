@@ -48,16 +48,23 @@ else:
     print 'There is no working ELSE option'
 
 
-# Fix for SEAsia
-#dirname = '/work/n01/n01/jelt/Solent_surge/dev_r8814_surge_modelling_Nemo4/CONFIG/Solent_surge/EXP00/'
+# Define some variables for the configuration
 config = 'Solent'
 filename = 'Solent_surge_5mi_20130101_20130101_5min.nc'
-variable = 'zos'
+key_variable = 'speed'
 xlim = [-1.67, -0.99]
 ylim = [50.53,50.92]
-levs = np.arange(-2,2+0.1,0.1)
 
-ofile = 'FIGURES/'+config+'_SSH.gif'
+if key_variable == 'zos':
+    ofile = 'FIGURES/'+config+'_SSH.gif'
+    levs = np.arange(-2,2+0.1,0.1)
+elif key_variable == 'speed':
+    ofile = 'FIGURES/'+config+'_speed.gif'
+    levs = np.arange(-3,3+0.5,0.5)
+    spacing = 150 # grid spacing between vectors
+    speed_min = 0.1 # Min speed to show vector
+else:
+    print "Not ready for that eventuality"
 
 
 
@@ -70,16 +77,23 @@ v = f.variables['vbar'][:]
 
 [nt,ny,nx] = np.shape(zos)
 
+# Compute speed and corresponding line width
+speed = np.sqrt(u**2+v**2)
+lw = 4. * speed / np.nanmax(speed); lw[(np.isnan(lw))] = 0.
+
+# Scale quiver vectors
+sU = u / speed
+sV = v / speed
 
 # Mask variables
 mask = ((np.sum(zos[0:3,:,:], axis=0)) == 0) # water=True, land=False
 zos = np.ma.masked_where(np.tile(mask,(nt,1,1)), zos)
+speed = np.ma.masked_where(np.tile(mask,(nt,1,1)), speed)
+sU = np.ma.masked_where( speed < speed_min, sU)
+sV = np.ma.masked_where( speed < speed_min, sV)
+
 #mask = (np.isnan(zos))
 #zos = np.ma.array( zos, mask = mask )
-
-# Compute speed and corresponding line width
-speed = np.sqrt(u**2+v**2)
-lw = 4. * speed / np.nanmax(speed); lw[(np.isnan(lw))] = 0.
 
 
 
@@ -109,6 +123,49 @@ def make_gif(files,output,delay=100, repeat=True,**kwargs):
 
     loop = -1 if repeat else 0
     os.system('convert -delay %d -loop %d %s %s'%(delay,loop," ".join(files),output))
+
+def sliceplotshade(X,Y,var,sU,sV,count,xlim,ylim,levs,spacing):
+
+## INSERTED CODE HERE
+
+    #clim = [-10**-6,10**-6]
+    #cz = plt.contour( X, Y, var, levels=[-2, -1, 0, 1 ,2],
+    #            color='k',
+    #            linewidth=2)
+    cset = ax.contourf( X, Y, var[count,:,:],
+                 levels=levs,
+                 extend='both',
+                 cmap='Spectral')
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
+    ax.set_xlabel('\nlongitude (deg)')
+    ax.set_ylabel('\nlatitude (deg)')
+    cset.set_clim([levs[0],levs[-1]])
+    ax.hold(True)
+
+    fig.colorbar(cset) # Add colorbar
+
+
+    plt.quiver(  X[::spacing,::spacing],
+                 Y[::spacing,::spacing],
+                 sU[count,::spacing,::spacing],
+                 sV[count,::spacing,::spacing],
+           units='xy', scale_units='width',scale=40)
+
+    adjustFigAspect(fig,aspect=(xlim[1]-xlim[0])/(ylim[1]-ylim[0]))
+
+
+
+    #lines = [ cz.collections[1], cz.collections[-1] ]
+    #labels = ['200m','800m']
+
+    #plt.legend( lines, labels, loc="lower right")
+
+    #plt.title('Upper 200m depth mean current (m/s)')
+    #plt.xlabel('longitude'); plt.ylabel('latitude')
+
+
+
 
 
 def sliceplotshadestream(X,Y,var,u,v,lw,count,xlim,ylim,levs):
@@ -170,11 +227,15 @@ if __name__ == '__main__':
         fig = plt.figure(figsize=(10,10))
         ax = fig.gca()
         #sshplot(X_arr,Y_arr,var_arr,count)
-        sliceplotshadestream(X_arr,Y_arr,zos,u,v,lw,count,xlim,ylim,levs)
         dat = datetime.datetime.strftime(time_datetime[count], '%d %b %Y: %H:%M')
+        if key_variable == 'zos':
+            sliceplotshadestream(X_arr,Y_arr,zos,u,v,lw,count,xlim,ylim,levs)
+            plt.title(config+': Sea Surface Height (m) '+str(dat))
+        elif key_variable == 'speed':
+            sliceplotshade(X_arr,Y_arr,speed,sU,sV,count,xlim,ylim,levs,spacing)
+            plt.title(config+': Tidal Speed (m/s) '+str(dat))
         #dat = 'hrs: '+str(count)
         #dat = 'hour: '+str(count/10)
-        plt.title(config+': Sea Surface Height (m) '+str(dat))
         ax.text(80, 18, str(dat), fontsize=10)
         plt.axis("on")
         #plt.show() # Can not save to file with this command present
