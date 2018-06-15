@@ -54,18 +54,34 @@ else:
 
 #################### USR PARAMETERS ##########################
 
-filename = 'Solent_surge_TPXO_5mi_20130101_20130101_5min.nc'
 levs     = np.arange(-2.5,2.5+0.1,0.1)
-ofile    = 'FIGURES/Solent_SSH.gif'
 
 
               
-source = 'AMM60'
-               
-dirname = '/Users/jeff/DATA/pycnmix/jelt/AMM60/'
-filename = 'cutdown_AMM60_1d_20120731_20120829_D2_Tides.nc'               
-               
-conlist = ['M2','S2','K2'] # constituent list
+source = 'FES2014' #'AMM60'
+
+if source == 'AMM60':               
+	#dirname = '/Users/jeff/DATA/pycnmix/jelt/AMM60/'
+	#filename = 'cutdown_AMM60_1d_20120731_20120829_D2_Tides.nc'               
+	dirname = '/projectsa/pycnmix/jelt/AMM60/'
+	filename = 'AMM60_1d_20120801_20120831_D2_Tides.nc'                
+	lon_var = 'nav_lon_grid_T'
+	lat_var = 'nav_lat_grid_T'
+
+
+elif source =='TPXO':
+	dirname = '/work/jelt/tpxo7.2/'
+	filename = 'h_tpxo7.2.nc'
+	lon_var = 'lon_z'
+	lat_var = 'lat_z'
+
+elif source =='FES2014':
+	dirname = '/projectsa/NEMO/Forcing/FES2014/ocean_tide_extrapolated/'
+	filename = 'm2.nc'
+	lon_var = 'lon' # 1D
+	lat_var = 'lat' # 1D
+
+conlist = ['M2'] #,'S2','K2'] # constituent list
 
 #################### INTERNAL FCTNS #########################
 
@@ -78,7 +94,8 @@ def plot_amp_pha( pj, X, Y, amp, pha, levs, label) :
     ## Shade basic plot. Create colorbar and nan color
     cmap0 = plt.cm.get_cmap('Spectral_r', 256)
     cmap0.set_bad('#9b9b9b', 1.0)
-    cset  = pj.contourf( xx, yy, amp, cmap = cmap0 )
+    cset  = pj.pcolormesh( xx, yy, amp, cmap = cmap0 )
+#    cset  = pj.contourf( xx, yy, amp, cmap = cmap0 )
 #    cset  = pj.contourf( xx, yy, amp, levels=levs, cmap = cmap0 )
     cset.set_clim([levs[0],levs[-1]])
 
@@ -86,7 +103,8 @@ def plot_amp_pha( pj, X, Y, amp, pha, levs, label) :
     hh = pj.contour(xx, yy, pha, levels=np.arange(0,360,30), colors='k', \
                       zorder=10)
     plt.clabel(hh, hh.levels, fmt='%d', inline=True, fontsize=10)
-
+    pj.drawcoastlines(linewidth = 0.2, zorder = 11)
+    
     ## Print title
     #plt.text( -1.19, 50.87, label, color='k', fontsize=13, fontproperties=font  )
     plt.title(label, color='k', fontsize=13, fontproperties=font  )
@@ -103,12 +121,35 @@ f = Dataset( dirname+filename )
 #print f.variables
 
 ## Load lat and lon
-nav_lat = f.variables['nav_lat_grid_T'][:] # (y,x)
-nav_lon = f.variables['nav_lon_grid_T'][:] # (y,x)
+nav_lat = f.variables[lat_var][:] # (y,x)
+nav_lon = f.variables[lon_var][:] # (y,x)
+
+if source == 'FES2014':
+	# convert 1D axes into 2D arrays
+ 	nav_lon, nav_lat = np.meshgrid(nav_lon, nav_lat)
+
 Lonmin = np.min( nav_lon ); Lonmax = np.max(nav_lon) ## min and max lon
 Latmin = np.min( nav_lat ); Latmax = np.max(nav_lat) ## min and max lat
 
+#print 'Lat:',Latmin, Latmax
+#print 'Lon:',Lonmin, Lonmax
 
+# set lat lon limits
+print 'Solent view'
+
+if source == 'AMM60':
+	Latmin = 50.5; Latmax = 50.9
+	Lonmin = -1.69; Lonmax = -1.00
+	#Lonmin = -4; Lonmax = 0
+	#Latmin = 48.9; Latmax = 51.9
+
+if source == 'TPXO':
+	Lonmin = 356.31; Lonmax = 359.9
+	Latmin = 48.9; Latmax = 51.9
+
+if source == 'FES2014':
+	Lonmin = 356.31; Lonmax = 359.9
+	Latmin = 48.9; Latmax = 51.9
 
 
 
@@ -126,17 +167,43 @@ if __name__ == '__main__':
     for con in conlist:
         print con
         label = source + ':'+con+' co-tidal chart'
+       
+        if source == 'AMM60':
+            	ssh  = f.variables[con+'x_SSH'][:] + 1j*f.variables[con+'y_SSH'][:] #(y, x)
+            	# Mask the array. Masking the lat and lon fields is not good for mst plotting functions but it seems to otherwise break the basemap projection...
+            	nav_lat[nav_lat==0] = np.nan
+            	mask = (np.isnan(nav_lat))
+            	#mask = (np.isnan(np.real(ssh)))
+            	ssh  = np.ma.array( ssh , mask = mask )
+            	nav_lon[mask] = np.nan
+	       
+	        ## Convert to amplitude and phase (degrees)
+        	ssh_amp = np.abs(ssh)
+        	ssh_pha = np.angle(ssh, deg=True)
+
+	elif source == 'TPXO':
+	        tpxo_conlist = f.variables['con'][:]
+		if con == 'M2':
+			ssh  = f.variables['hRe'][1,:,:] + 1j*f.variables['hIm'][1,:,:] #(nc, y, x)
+		else:
+			print 'not ready for that constituent'
+
         
-        ssh  = f.variables[con+'x_SSH'][:] + 1j*f.variables[con+'y_SSH'][:] #(y, x)
-            
-        ## Mask the array
-        ssh[ssh==0] = np.nan
-        mask = (np.isnan(np.real(ssh)))
-        ssh  = np.ma.array( ssh , mask = mask )
-        
-        ## Convert to amplitude and phase (degrees)
-        ssh_amp = np.abs(ssh)
-        ssh_pha = np.angle(ssh, deg=True)
+	        ## Convert to amplitude and phase (degrees)
+        	ssh_amp = np.abs(ssh)
+        	ssh_pha = np.angle(ssh, deg=True)
+
+	if source == 'FES2014':
+		ssh_amp = f.variables['amplitude'][:]
+		ssh_pha = f.variables['phase'][:]
+
+
+
+        #plt.pcolormesh(nav_lon, nav_lat, ssh_amp)
+	#plt.show()
+
+	#plt.pcolormesh(nav_lat, nav_lon, ssh_amp)
+	#plt.show()
             
         # DEFINE FIGURES AND SUBGRID
         fig = plt.figure( figsize = ( 8.4, 2+10*(Latmax-Latmin)/(Lonmax-Lonmin) ) )
@@ -144,18 +211,22 @@ if __name__ == '__main__':
         
         ## DEFINE AND PLOT BASEMAP PROJECTION
         ax = plt.subplot( gs[0] )
-        pj = Basemap( projection='cyl', llcrnrlat=Latmin, urcrnrlat=Latmax, \
-                                        llcrnrlon=Lonmin, urcrnrlon=Lonmax, resolution='c' )
+        #pj = Basemap( projection='cyl', llcrnrlat=Latmin, urcrnrlat=Latmax, \
+        pj = Basemap( projection='tmerc',lon_0=0.,lat_0=52., llcrnrlat=Latmin, urcrnrlat=Latmax, \
+                                        llcrnrlon=Lonmin, urcrnrlon=Lonmax, resolution='f' )
         #pj.drawparallels(np.arange(50.,51.5,0.1)); pj.drawmeridians(np.arange(-2.,0.,0.1))
         
         plot_amp_pha( pj, X_arr, Y_arr, ssh_amp, ssh_pha, levs, label )
-        
+
+
         plt.title('amplitude (m)', fontsize=12, fontproperties=font )
             
         
         ## OUTPUT FIGURES
         fname = "./FIGURES/"+filename.replace('.nc','_'+con+'.png')
-        print label,fname
+	if source == 'FES2014':
+        	fname = "./FIGURES/"+source+'_'+filename.replace('.nc','_'+con+'.png')
+	print label,fname
         #plt.show()
         plt.savefig(fname, dpi=100)
         plt.close()
