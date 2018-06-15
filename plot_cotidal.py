@@ -54,11 +54,12 @@ else:
 
 #################### USR PARAMETERS ##########################
 
-levs     = np.arange(-2.5,2.5+0.1,0.1)
+levs     = np.arange(0,2.5+0.1,0.1)
 
+conlist = ['M2'] # ['M2','S2','K2'] # constituent list
 
-
-source = 'AMM60'# 'TPXO' #'AMM60'  # 'FES2014' 
+source = str(sys.argv[1])
+#source = 'TPXO'# 'TPXO' #'AMM60'  # 'FES2014' 
 
 if source == 'AMM60':
 	#dirname = '/Users/jeff/DATA/pycnmix/jelt/AMM60/'
@@ -77,11 +78,12 @@ elif source =='TPXO':
 
 elif source =='FES2014':
     dirname = '/projectsa/NEMO/Forcing/FES2014/ocean_tide_extrapolated/'
-    filename = 'm2.nc'
+    filename = conlist[0].lower()+'.nc'
     lon_var = 'lon' # 1D
     lat_var = 'lat' # 1D
 
-conlist = ['M2'] #,'S2','K2'] # constituent list
+print 'Note: If {} has more than one element then the FES2014 data wont load properly'.format(conlist)
+
 
 #################### INTERNAL FCTNS #########################
 
@@ -188,6 +190,8 @@ if __name__ == '__main__':
 	        tpxo_conlist = f.variables['con'][:]
 		if con == 'M2':
 			ssh  = f.variables['hRe'][1,:,:] + 1j*f.variables['hIm'][1,:,:] #(nc, y, x)
+		elif con == 'S2':
+			ssh  = f.variables['hRe'][2,:,:] + 1j*f.variables['hIm'][2,:,:] #(nc, y, x)
 		else:
 			print 'not ready for that constituent'
 
