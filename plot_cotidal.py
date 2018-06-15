@@ -58,7 +58,7 @@ levs     = np.arange(-2.5,2.5+0.1,0.1)
 
 
 
-source = 'AMM60' # 'TPXO' # 'FES2014' 
+source = 'AMM60'# 'TPXO' #'AMM60'  # 'FES2014' 
 
 if source == 'AMM60':
 	#dirname = '/Users/jeff/DATA/pycnmix/jelt/AMM60/'
@@ -138,10 +138,10 @@ Latmin = np.min( nav_lat ); Latmax = np.max(nav_lat) ## min and max lat
 print 'Solent view'
 
 if source == 'AMM60':
-	Latmin = 50.5; Latmax = 50.9
-	Lonmin = -1.69; Lonmax = -1.00
-	#Lonmin = -4; Lonmax = 0
-	#Latmin = 48.9; Latmax = 51.9
+	#Latmin = 50.5; Latmax = 50.9
+	#Lonmin = -1.69; Lonmax = -1.00
+	Lonmin = -3.69; Lonmax = -0.1
+	Latmin = 48.9; Latmax = 51.9
 
 if source == 'TPXO':
 	Lonmin = 356.31; Lonmax = 359.9
@@ -181,6 +181,8 @@ if __name__ == '__main__':
 	        ## Convert to amplitude and phase (degrees)
         	ssh_amp = np.abs(ssh)
         	ssh_pha = np.angle(ssh, deg=True)
+		ssh_amp = np.ma.masked_where( ssh==0, ssh_amp )
+		ssh_pha = np.ma.masked_where( ssh==0, ssh_pha )
 
 	elif source == 'TPXO':
 	        tpxo_conlist = f.variables['con'][:]
@@ -193,6 +195,7 @@ if __name__ == '__main__':
 	        ## Convert to amplitude and phase (degrees)
         	ssh_amp = np.abs(ssh)
         	ssh_pha = np.angle(ssh, deg=True)
+		ssh_amp = np.ma.masked_where( ssh==0, ssh_amp )
 		ssh_pha = np.ma.masked_where( ssh==0, ssh_pha )
 
 	if source == 'FES2014':
