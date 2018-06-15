@@ -58,7 +58,7 @@ levs     = np.arange(-2.5,2.5+0.1,0.1)
 
 
 
-source = 'FES2014' #'AMM60'
+source = 'AMM60' # 'TPXO' # 'FES2014' 
 
 if source == 'AMM60':
 	#dirname = '/Users/jeff/DATA/pycnmix/jelt/AMM60/'
@@ -174,7 +174,8 @@ if __name__ == '__main__':
             	nav_lat[nav_lat==0] = np.nan
             	mask = (np.isnan(nav_lat))
             	#mask = (np.isnan(np.real(ssh)))
-            	ssh  = np.ma.array( ssh , mask = mask )
+            	#ssh  = np.ma.array( ssh , mask = mask )
+            	ssh  = np.ma.masked_where( ssh==0, ssh )
             	nav_lon[mask] = np.nan
 
 	        ## Convert to amplitude and phase (degrees)
@@ -192,10 +193,11 @@ if __name__ == '__main__':
 	        ## Convert to amplitude and phase (degrees)
         	ssh_amp = np.abs(ssh)
         	ssh_pha = np.angle(ssh, deg=True)
+		ssh_pha = np.ma.masked_where( ssh==0, ssh_pha )
 
 	if source == 'FES2014':
-        ssh_amp = f.variables['amplitude'][:]
-        ssh_pha = f.variables['phase'][:]
+        	ssh_amp = f.variables['amplitude'][:]/100. # convert units to metres
+        	ssh_pha = f.variables['phase'][:]
 
 
 
