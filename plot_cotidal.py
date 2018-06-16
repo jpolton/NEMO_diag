@@ -8,6 +8,7 @@
 Plot pretty cotidal chart
 ** origin: ** cotidalchart_NEMO.ipynb
 ** Author: ** JP 31 Jan 2017
+** Usage: ** plot_cotidal.py 'AMM60' 'M2'
 ** Changelog: **
 * 31 Jan 2017: Start with AMM60_MASSMO_fronts.ipynb
 * 24 Mar 2017: Copied from AMM60_SSH_anim.py
@@ -43,12 +44,14 @@ font0  = FontProperties(); font = font0.copy(); font.set_weight('bold'); font.se
 ## Check host name and locate file path
 import socket
 if str('livmap') in socket.gethostname().lower():
-    dirname = '/Users/jeff/Desktop/'
+    rootdir = '/Volumes'
 #    dirname = '/Users/jeff/Desktop/OneWeekExpiry/tmp/'
 elif str('livljobs') in socket.gethostname().lower():
-    dirname = '/scratch/jelt/tmp/'
+    rootdir = ''
 elif str('eslogin') in socket.gethostname().lower():
-    dirname = '/work/n01/n01/jelt/Solent_surge/dev_r8814_surge_modelling_Nemo4/CONFIG/Solent_surge/EXP_TPXO/'
+    rootdir = ''
+elif str('mola') in socket.gethostname().lower() or str('tardis') in socket.gethostname().lower() :
+    rootdir = '/Volumes'
 else:
     print 'There is no working ELSE option'
 
