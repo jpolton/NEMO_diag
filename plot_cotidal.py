@@ -1,5 +1,4 @@
 #!/usr/bin/python
-#%plot_cotidal.py
 #
 # plot_cotidal.py
 #
@@ -7,6 +6,7 @@
 """
 ** Summary: **
 Plot pretty cotidal chart
+
 ** origin: ** cotidalchart_NEMO.ipynb
 ** Author: ** JP 31 Jan 2017
 
@@ -89,7 +89,6 @@ elif source =='FES2014':
     lon_var = 'lon' # 1D
     lat_var = 'lat' # 1D
 
-#print 'Note: If {} has more than one element then the FES2014 data wont load properly'.format(conlist)
 
 
 #################### INTERNAL FCTNS #########################
@@ -214,13 +213,6 @@ if __name__ == '__main__':
         ssh_amp = f.variables['amplitude'][:]/100. # convert units to metres
         ssh_pha = f.variables['phase'][:]
 
-
-
-    #plt.pcolormesh(nav_lon, nav_lat, ssh_amp)
-    #plt.show()
-
-    #plt.pcolormesh(nav_lat, nav_lon, ssh_amp)
-    #plt.show()
 
     # DEFINE FIGURES AND SUBGRID
     fig = plt.figure( figsize = ( 8.4, 2+10*(Latmax-Latmin)/(Lonmax-Lonmin) ) )
