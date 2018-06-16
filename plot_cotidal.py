@@ -59,7 +59,7 @@ levs     = np.arange(0,2.5+0.1,0.1)
 conlist = ['M2'] # ['M2','S2','K2'] # constituent list
 
 source = str(sys.argv[1])
-#source = 'TPXO'# 'TPXO' #'AMM60'  # 'FES2014' 
+#source = 'TPXO'# 'TPXO' #'AMM60'  # 'FES2014'
 
 if source == 'AMM60':
 	#dirname = '/Users/jeff/DATA/pycnmix/jelt/AMM60/'
@@ -187,11 +187,11 @@ if __name__ == '__main__':
 		ssh_pha = np.ma.masked_where( ssh==0, ssh_pha )
 
 	elif source == 'TPXO':
-	        tpxo_conlist = f.variables['con'][:]
-		if con == 'M2':
-			ssh  = f.variables['hRe'][1,:,:] + 1j*f.variables['hIm'][1,:,:] #(nc, y, x)
+        tpxo_conlist = f.variables['con'][:]
+        if con == 'M2':
+			ssh  = f.variables['hRe'][0,:,:] + 1j*f.variables['hIm'][0,:,:] #(nc, y, x)
 		elif con == 'S2':
-			ssh  = f.variables['hRe'][2,:,:] + 1j*f.variables['hIm'][2,:,:] #(nc, y, x)
+			ssh  = f.variables['hRe'][1,:,:] + 1j*f.variables['hIm'][1,:,:] #(nc, y, x)
 		else:
 			print 'not ready for that constituent'
 
@@ -201,6 +201,8 @@ if __name__ == '__main__':
         	ssh_pha = np.angle(ssh, deg=True)
 		ssh_amp = np.ma.masked_where( ssh==0, ssh_amp )
 		ssh_pha = np.ma.masked_where( ssh==0, ssh_pha )
+
+
 
 	if source == 'FES2014':
         	ssh_amp = f.variables['amplitude'][:]/100. # convert units to metres
