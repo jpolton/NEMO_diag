@@ -59,33 +59,41 @@ else:
 
 levs     = np.arange(0,2.5+0.1,0.1)
 
-conlist = ['M2'] # ['M2','S2','K2'] # constituent list
+if len(sys.argv) >= 1:
+    source = str(sys.argv[1])
+else:
+    source = 'TPXO'
+    #source = 'TPXO'# 'TPXO' #'AMM60'  # 'FES2014'
 
-source = str(sys.argv[1])
-#source = 'TPXO'# 'TPXO' #'AMM60'  # 'FES2014'
+if len(sys.argv) > 2:
+    con = str(sys.argv[2])
+else:
+    con = 'M2'
+    # conlist = ['M2'] # ['M2','S2','K2'] # constituent list
+
 
 if source == 'AMM60':
 	#dirname = '/Users/jeff/DATA/pycnmix/jelt/AMM60/'
 	#filename = 'cutdown_AMM60_1d_20120731_20120829_D2_Tides.nc'
-	dirname = '/projectsa/pycnmix/jelt/AMM60/'
+	dirname = rootdir+'/projectsa/pycnmix/jelt/AMM60/'
 	filename = 'AMM60_1d_20120801_20120831_D2_Tides.nc'
 	lon_var = 'nav_lon_grid_T'
 	lat_var = 'nav_lat_grid_T'
 
 
 elif source =='TPXO':
-	dirname = '/work/jelt/tpxo7.2/'
+	dirname = rootdir+'/work/jelt/tpxo7.2/'
 	filename = 'h_tpxo7.2.nc'
 	lon_var = 'lon_z'
 	lat_var = 'lat_z'
 
 elif source =='FES2014':
-    dirname = '/projectsa/NEMO/Forcing/FES2014/ocean_tide_extrapolated/'
-    filename = conlist[0].lower()+'.nc'
+    dirname = rootdir+'/projectsa/NEMO/Forcing/FES2014/ocean_tide_extrapolated/'
+    filename = con.lower()+'.nc'
     lon_var = 'lon' # 1D
     lat_var = 'lat' # 1D
 
-print 'Note: If {} has more than one element then the FES2014 data wont load properly'.format(conlist)
+#print 'Note: If {} has more than one element then the FES2014 data wont load properly'.format(conlist)
 
 
 #################### INTERNAL FCTNS #########################
