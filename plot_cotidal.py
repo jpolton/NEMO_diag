@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #%plot_cotidal.py
 #
 # plot_cotidal.py
@@ -177,84 +178,77 @@ if __name__ == '__main__':
     Y_arr   = nav_lat
     files   = []
 
-    for con in conlist:
-        print con
-        label = source + ':'+con+' co-tidal chart'
+    print 'Constituent {}'.format(con)
+    label = source + ':'+con+' co-tidal chart'
 
-        if source == 'AMM60':
-            	ssh  = f.variables[con+'x_SSH'][:] + 1j*f.variables[con+'y_SSH'][:] #(y, x)
-            	# Mask the array. Masking the lat and lon fields is not good for mst plotting functions but it seems to otherwise break the basemap projection...
-            	nav_lat[nav_lat==0] = np.nan
-            	mask = (np.isnan(nav_lat))
-            	#mask = (np.isnan(np.real(ssh)))
-            	#ssh  = np.ma.array( ssh , mask = mask )
-            	ssh  = np.ma.masked_where( ssh==0, ssh )
-            	nav_lon[mask] = np.nan
+    if source == 'AMM60':
+        ssh  = f.variables[con+'x_SSH'][:] + 1j*f.variables[con+'y_SSH'][:] #(y, x)
+        # Mask the array. Masking the lat and lon fields is not good for mst plotting functions but it seems to otherwise break the basemap projection...
+        nav_lat[nav_lat==0] = np.nan
+        mask = (np.isnan(nav_lat))
+        #mask = (np.isnan(np.real(ssh)))
+        #ssh  = np.ma.array( ssh , mask = mask )
+        ssh  = np.ma.masked_where( ssh==0, ssh )
+        nav_lon[mask] = np.nan
 
-	        ## Convert to amplitude and phase (degrees)
-        	ssh_amp = np.abs(ssh)
-        	ssh_pha = np.angle(ssh, deg=True)
-		ssh_amp = np.ma.masked_where( ssh==0, ssh_amp )
-		ssh_pha = np.ma.masked_where( ssh==0, ssh_pha )
+        ## Convert to amplitude and phase (degrees)
+        ssh_amp = np.abs(ssh)
+        ssh_pha = np.angle(ssh, deg=True)
+        ssh_amp = np.ma.masked_where( ssh==0, ssh_amp )
+        ssh_pha = np.ma.masked_where( ssh==0, ssh_pha )
 
-	elif source == 'TPXO':
+    elif source == 'TPXO':
         tpxo_conlist = f.variables['con'][:]
         if con == 'M2':
-			ssh  = f.variables['hRe'][0,:,:] + 1j*f.variables['hIm'][0,:,:] #(nc, y, x)
-		elif con == 'S2':
-			ssh  = f.variables['hRe'][1,:,:] + 1j*f.variables['hIm'][1,:,:] #(nc, y, x)
-		else:
-			print 'not ready for that constituent'
+            ssh  = f.variables['hRe'][0,:,:] + 1j*f.variables['hIm'][0,:,:] #(nc, y, x)
+        elif con == 'S2':
+            ssh  = f.variables['hRe'][1,:,:] + 1j*f.variables['hIm'][1,:,:] #(nc, y, x)
+        else:
+            print 'not ready for that constituent'
 
 
-	        ## Convert to amplitude and phase (degrees)
-        	ssh_amp = np.abs(ssh)
-        	ssh_pha = np.angle(ssh, deg=True)
-		ssh_amp = np.ma.masked_where( ssh==0, ssh_amp )
-		ssh_pha = np.ma.masked_where( ssh==0, ssh_pha )
-
-
-
-	if source == 'FES2014':
-        	ssh_amp = f.variables['amplitude'][:]/100. # convert units to metres
-        	ssh_pha = f.variables['phase'][:]
+        ## Convert to amplitude and phase (degrees)
+        ssh_amp = np.abs(ssh)
+        ssh_pha = np.angle(ssh, deg=True)
+        ssh_amp = np.ma.masked_where( ssh==0, ssh_amp )
+        ssh_pha = np.ma.masked_where( ssh==0, ssh_pha )
 
 
 
-        #plt.pcolormesh(nav_lon, nav_lat, ssh_amp)
-	#plt.show()
-
-	#plt.pcolormesh(nav_lat, nav_lon, ssh_amp)
-	#plt.show()
-
-        # DEFINE FIGURES AND SUBGRID
-        fig = plt.figure( figsize = ( 8.4, 2+10*(Latmax-Latmin)/(Lonmax-Lonmin) ) )
-        gs  = gridspec.GridSpec( 1, 1 ); gs.update( wspace=0.2, hspace=0.1, top = 0.78, bottom = 0.15, left = 0.01, right = 0.99 )
-
-        ## DEFINE AND PLOT BASEMAP PROJECTION
-        ax = plt.subplot( gs[0] )
-        #pj = Basemap( projection='cyl', llcrnrlat=Latmin, urcrnrlat=Latmax, \
-        pj = Basemap( projection='tmerc',lon_0=0.,lat_0=52., llcrnrlat=Latmin, urcrnrlat=Latmax, \
-                                        llcrnrlon=Lonmin, urcrnrlon=Lonmax, resolution='f' )
-        #pj.drawparallels(np.arange(50.,51.5,0.1)); pj.drawmeridians(np.arange(-2.,0.,0.1))
-
-        plot_amp_pha( pj, X_arr, Y_arr, ssh_amp, ssh_pha, levs, label )
-
-
-        plt.title('amplitude (m)', fontsize=12, fontproperties=font )
-
-
-        ## OUTPUT FIGURES
-        fname = "./FIGURES/"+filename.replace('.nc','_'+con+'.png')
-	if source == 'FES2014':
-        	fname = "./FIGURES/"+source+'_'+filename.replace('.nc','_'+con+'.png')
-	print label,fname
-        #plt.show()
-        plt.savefig(fname, dpi=100)
-        plt.close()
+    if source == 'FES2014':
+        ssh_amp = f.variables['amplitude'][:]/100. # convert units to metres
+        ssh_pha = f.variables['phase'][:]
 
 
 
+    #plt.pcolormesh(nav_lon, nav_lat, ssh_amp)
+    #plt.show()
 
-    #for f in files:
-    #    os.remove(f)
+    #plt.pcolormesh(nav_lat, nav_lon, ssh_amp)
+    #plt.show()
+
+    # DEFINE FIGURES AND SUBGRID
+    fig = plt.figure( figsize = ( 8.4, 2+10*(Latmax-Latmin)/(Lonmax-Lonmin) ) )
+    gs  = gridspec.GridSpec( 1, 1 ); gs.update( wspace=0.2, hspace=0.1, top = 0.78, bottom = 0.15, left = 0.01, right = 0.99 )
+
+    ## DEFINE AND PLOT BASEMAP PROJECTION
+    ax = plt.subplot( gs[0] )
+    #pj = Basemap( projection='cyl', llcrnrlat=Latmin, urcrnrlat=Latmax, \
+    pj = Basemap( projection='tmerc',lon_0=0.,lat_0=52., llcrnrlat=Latmin, urcrnrlat=Latmax, \
+                                    llcrnrlon=Lonmin, urcrnrlon=Lonmax, resolution='l' )
+    #pj.drawparallels(np.arange(50.,51.5,0.1)); pj.drawmeridians(np.arange(-2.,0.,0.1))
+
+    plot_amp_pha( pj, X_arr, Y_arr, ssh_amp, ssh_pha, levs, label )
+
+
+    plt.title('amplitude (m)', fontsize=12, fontproperties=font )
+
+
+    ## OUTPUT FIGURE
+    fname = "./FIGURES/"+filename.replace('.nc','_'+con+'.png')
+    if source == 'FES2014':
+        fname = "./FIGURES/"+source+'_'+filename.replace('.nc','_'+con+'.png')
+    print label,fname
+    #plt.show()
+    plt.savefig(fname, dpi=100)
+    plt.close()
