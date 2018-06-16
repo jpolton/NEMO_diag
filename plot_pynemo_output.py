@@ -37,7 +37,7 @@ elif str('livljobs') in socket.gethostname().lower():
     dirname = ''
 elif str('eslogin') in socket.gethostname().lower():
     dirname = ''
-elif str('mola') in socket.gethostname().lower():
+elif str('mola') in socket.gethostname().lower() or str('tardis') in socket.gethostname().lower() :
     dirname = '/Volumes/work/jelt/NEMO/Solent/INPUTS/'
 else:
     print 'There is no working ELSE option'
@@ -45,8 +45,10 @@ else:
 #################### USER PARAMETERS ##########################
 
 
-source = 'FES'
+#source = 'FES'
 source = 'TPXO'
+
+dpts = 10 # subsampling freq
 
 con = 'M2'
 filename = 'Solent_bdytide_rotT_'+con+'_grid_T.nc'
@@ -64,36 +66,50 @@ nav_lon = f.variables['nav_lon'][:] # y,x
 
 
 yb, xb = np.shape(z_cos)
+pts = range(0,xb,dpts)
+X = [ nav_lon[ nbjdta[0,i],nbidta[0,i] ] for i in range(0,xb,dpts)]
+Y = [ nav_lat[ nbjdta[0,i],nbidta[0,i] ] for i in range(0,xb,dpts)]
+Z = [ np.abs( z_cos[0,i] + 1j*z_sin[0,i] ) for i in range(0,xb,dpts)]
 
 #fig = plt.figure( figsize = ( 8.4, 2+10*(Latmax-Latmin)/(Lonmax-Lonmin) ) )
 fig = plt.figure( figsize = ( 8.4, 2+10) )
 
 ## DEFINE AND PLOT BASEMAP PROJECTION
-ax = plt.subplot(2,2,1 )
+ax = plt.subplot(4,1,1 )
         
-plt.plot(np.arange(xb), z_cos[0,:], 'b', label='zcos')
-plt.plot(np.arange(xb), z_sin[0,:], 'g', label='zsin' )
+plt.plot(pts, z_cos[0,pts], 'b', label='zcos')
+plt.plot(pts, z_sin[0,pts], 'g', label='zsin' )
 plt.legend(loc='best')
-ax = plt.subplot(2,2,2 )
-plt.plot(np.arange(xb), nbidta[0,:], 'r', label='nbidta')
-plt.plot(np.arange(xb), nbjdta[0,:], 'g', label='nbjdta')
+ax = plt.subplot(4,2,3 )
+plt.plot(pts, X, 'r', label='lon')
+plt.legend(loc='best')
+ax = plt.subplot(4,2,4 )
+plt.plot(pts, Y, 'g', label='lat')
 plt.legend(loc='best')
 
 
 amp = np.zeros(np.shape(nav_lat)) * np.nan
 
 
-for i in range(xb):
-    amp[ nbjdta[0,i],nbidta[0,i] ] = np.abs(z_cos[0,i] + 1j*z_sin[0,i])
-    amp[ nbjdta[0,i],nbidta[0,i] ] = i
-    
+#for i in range(xb):
+    #amp[ nbjdta[0,i],nbidta[0,i] ] = np.abs(z_cos[0,i] + 1j*z_sin[0,i])
 
-amp = np.ma.masked_where( np.isnan(amp), amp)
+#amp = np.ma.masked_where( np.isnan(amp), amp)
+
 ax = plt.subplot(2,1,2)
-plt.pcolormesh(nav_lon,nav_lat,amp)
-plt.clim([0,xb])
-plt.xlim([-1.1, -0.9])
-plt.ylim([50.5,50.6])
-plt.title('abs(z)')
+#plt.pcolormesh(nav_lon,nav_lat,amp)
+plt.scatter(X,Y,c=Z, s=30, alpha=1, edgecolors='face')
+plt.clim([0,2.5])
+plt.xlim([nav_lon.min()-0.1, nav_lon.max()+0.1])
+plt.ylim([nav_lat.min()-0.1, nav_lat.max()+0.1])
+plt.title(source+': abs(z)')
 plt.xlabel('lon'); plt.ylabel('lat')
-plt.colorbar()    
+plt.colorbar(extend='max')    
+
+
+## OUTPUT FIGURES
+fname = "./FIGURES/"+source+'_'+filename.replace('.nc','_'+con+'.png')
+print fname
+#plt.show()
+plt.savefig(fname, dpi=100)
+plt.close()
