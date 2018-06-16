@@ -9,7 +9,7 @@
 Plot pretty cotidal chart
 ** origin: ** cotidalchart_NEMO.ipynb
 ** Author: ** JP 31 Jan 2017
-** Usage: ** plot_cotidal.py 'AMM60' 'M2'
+
 ** Changelog: **
 * 31 Jan 2017: Start with AMM60_MASSMO_fronts.ipynb
 * 24 Mar 2017: Copied from AMM60_SSH_anim.py
@@ -20,6 +20,8 @@ Plot pretty cotidal chart
 
 ** Issues: **
 * None. It is amazing.
+
+** Usage: ** plot_cotidal.py 'AMM60' 'M2'
 """
 
 ##################### LOAD MODULES ###########################
@@ -31,15 +33,8 @@ import matplotlib.gridspec as gridspec
 from  mpl_toolkits.basemap import Basemap
 import sys
 sys.path.append('../jcomp_tools_dev/') # Add the directory with the amm60_data_tools.py file to path. Not used on the NOCL SAN
-from AMM60_tools import NEMO_fancy_datestr # NEMO date strings
-from mpl_toolkits.mplot3d import Axes3D # 3d plotting
-from itertools import product, combinations # plotting 3d frame
-import os #, sys  # removing files and building animation
-import datetime
 ##%matplotlib inline
 from   matplotlib.font_manager import FontProperties
-import matplotlib.colors as colors
-import matplotlib.ticker as ticker
 font0  = FontProperties(); font = font0.copy(); font.set_weight('bold'); font.set_size('large')
 
 ## Check host name and locate file path
@@ -235,7 +230,7 @@ if __name__ == '__main__':
     ax = plt.subplot( gs[0] )
     #pj = Basemap( projection='cyl', llcrnrlat=Latmin, urcrnrlat=Latmax, \
     pj = Basemap( projection='tmerc',lon_0=0.,lat_0=52., llcrnrlat=Latmin, urcrnrlat=Latmax, \
-                                    llcrnrlon=Lonmin, urcrnrlon=Lonmax, resolution='l' )
+                                    llcrnrlon=Lonmin, urcrnrlon=Lonmax, resolution='f' )
     #pj.drawparallels(np.arange(50.,51.5,0.1)); pj.drawmeridians(np.arange(-2.,0.,0.1))
 
     plot_amp_pha( pj, X_arr, Y_arr, ssh_amp, ssh_pha, levs, label )
