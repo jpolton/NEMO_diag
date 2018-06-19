@@ -11,7 +11,7 @@ Plot boundary conditions from TPXO and FES2014
 ** Issues: **
 * tides are not ready with the new filelist format
 
-** Usage: ** plot_pynemo_output.py 'ssh'
+** Usage: ** plot_pynemo_output.py 'ssh' 'jelt'
 """
 
 ##################### LOAD MODULES ###########################
@@ -56,15 +56,20 @@ else:
 	#type = 'u3d'
 	#type = 'tra'
 
+if len(sys.argv) > 2:
+        tag = str(sys.argv[2])
+else:
+	tag = 'jelt'
+	#tag = 'jelt'
+	#tag = 'jdha'
+
 region = 'SEAsia'
 
 ##############################################################
 
-tag = 'jelt'
-#tag = 'jdha'
 
 if tag == 'jelt': # extra sting on output file 
-	dirname = '/work/jelt/NEMO/' + region +'/INPUTS/'
+	dirname = '/work/n01/n01/jelt/' + region +'/INPUTS/'
 	filelist = {	'ft':'SEAsia_bdyT_y1979m11.nc',
 			'fbt':'SEAsia_bt_bdyT_y1979m11.nc',
 			'fu':'SEAsia_bdyU_y1979m11.nc',
@@ -86,8 +91,14 @@ if type == 'tide':
 	#filename = 'Solent_bdytide_rotT_'+con+'_grid_T.nc'
 	#print 'Inspect file: {}'.format(dirname+source+'/'+filename)
 	#f = Dataset(dirname+source+'/'+filename)
-
-	filename = region + '_bdytide_rotT_'+con+'_grid_T.nc'
+	if tag == 'jdha':
+		dirname = '/work/n01/n01/jdha/2018/SEAsia/EXP_openbcs/bdydta/'
+		filename = region + '_bdytide_rotT_'+con+'_grid_T.nc'
+	elif tag == 'jelt':
+		dirname = '/work/n01/n01/jelt/' + region +'/INPUTS/'
+		filename = region + '_bdytide_rotT_'+con+'_grid_T.nc'
+	else:
+		print 'panic'
 	print 'Inspect file: {}'.format(dirname+filename)
 	f = Dataset(dirname+filename)
 	z_cos = f.variables['z1'][:] # yb,xb
@@ -168,9 +179,16 @@ fig = plt.figure( figsize = ( 8.4, 2+10) )
 
 ## DEFINE AND PLOT BASEMAP PROJECTION
 ax = plt.subplot(4,1,1 )
-        
-plt.plot(pts, np.real(var[pts]), 'b', label='zcos')
-plt.plot(pts, np.imag(var[pts]), 'g', label='zsin' )
+
+#for iComp, Comp in enumerate( index_Buoys ) :
+#	plt.plot(pts, np.imag(var[pts]), 'g', label=label[icomp] )
+
+if type == 'tide':        
+	plt.plot(pts, np.real(var[pts]), 'b', label='zcos' )
+	plt.plot(pts, np.imag(var[pts]), 'g', label='zsin' )
+else:
+	plt.plot(pts, var[pts], 'b', label=varnam )
+
 plt.legend(loc='best')
 ax = plt.subplot(4,2,3 )
 plt.plot(pts, X, 'r', label='lon')
@@ -194,7 +212,7 @@ plt.scatter(X,Y,c=Z, s=30, alpha=1, edgecolors='face')
 #plt.clim([0,2.5])
 plt.xlim([nav_lon.min()-0.1, nav_lon.max()+0.1])
 plt.ylim([nav_lat.min()-0.1, nav_lat.max()+0.1])
-plt.title(source+': abs(z)')
+plt.title(source+': abs('+varnam+')')
 plt.xlabel('lon'); plt.ylabel('lat')
 plt.colorbar(extend='max')    
 
