@@ -19,7 +19,7 @@ Plot pretty cotidal chart
 * 16 Jun 2018: convert back to non animated co-tidal charts
 
 ** Issues: **
-* None. It is amazing.
+* Move to ShelfAssess abstract settings to config / namelist?
 
 ** Usage: ** plot_cotidal.py 'Solent' 'AMM60' 'M2'
 """
