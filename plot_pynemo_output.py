@@ -60,10 +60,10 @@ region = 'SEAsia'
 
 ##############################################################
 
-dirname = '/work/n01/n01/jelt/' + region +'/INPUTS/'
-tag='jelt' # extra string on output files
-#dirname = '/work/n01/n01/jdha/2018/SEAsia/EXP_openbcs/bcs/'
-#tag='jdha' # extra string on output files
+#dirname = '/work/n01/n01/jelt/' + region +'/INPUTS/'
+#tag='jelt' # extra string on output files
+dirname = '/work/n01/n01/jdha/2018/SEAsia/EXP_openbcs/bcs/'
+tag='jdha' # extra string on output files
 
 if type == 'tide':
 	#source = 'FES'
@@ -186,6 +186,8 @@ plt.title(source+': abs(z)')
 plt.xlabel('lon'); plt.ylabel('lat')
 plt.colorbar(extend='max')    
 
+## Add footnote
+plt.figtext(0.99, 0.01, str(sys.argv), horizontalalignment='right')
 
 ## OUTPUT FIGURES
 print 'Output filename: {}'.format(fname)
