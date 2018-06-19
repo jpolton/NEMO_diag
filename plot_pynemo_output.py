@@ -9,7 +9,7 @@ Plot boundary conditions from TPXO and FES2014
 * 15 Jun 2018: convert back to non animated co-tidal charts
 
 ** Issues: **
-* None. It is amazing.
+* tides are not ready with the new filelist format
 
 ** Usage: ** plot_pynemo_output.py 'ssh'
 """
@@ -60,10 +60,22 @@ region = 'SEAsia'
 
 ##############################################################
 
-#dirname = '/work/n01/n01/jelt/' + region +'/INPUTS/'
-#tag='jelt' # extra string on output files
-dirname = '/work/n01/n01/jdha/2018/SEAsia/EXP_openbcs/bcs/'
-tag='jdha' # extra string on output files
+tag = 'jelt'
+#tag = 'jdha'
+
+if tag == 'jelt': # extra sting on output file 
+	dirname = '/work/jelt/NEMO/' + region +'/INPUTS/'
+	filelist = {	'ft':'SEAsia_bdyT_y1979m11.nc',
+			'fbt':'SEAsia_bt_bdyT_y1979m11.nc',
+			'fu':'SEAsia_bdyU_y1979m11.nc',
+			'fv':'SEAsia_bdyV_y1979m11.nc'}
+elif tag == 'jdha': # extra sting on output file
+	dirname = '/work/n01/n01/jdha/2018/SEAsia/EXP_openbcs/bcs/'
+	filelist = {
+			'ft':'SEAsia_full_bdyT_y1979m11.nc',
+			'fbt':'SEAsia_full_bt_bdyT_y1979m11.nc',
+			'fu':'SEAsia_spl_vel_bdyU_y1979m11.nc',
+			'fv':'SEAsia_spl_vel_bdyV_y1979m11.nc'}
 
 if type == 'tide':
 	#source = 'FES'
@@ -86,9 +98,9 @@ if type == 'tide':
 elif type == 'ssh':
 	varnam = 'sossheig'
 	source = 'ORCA0083'
-	filename = region + '_full_bt_bdyT_y1979m11.nc'
-	f = Dataset(dirname+filename)
+	filename = filelist['fbt'] # #region + '_bt_bdyT_y1979m11.nc'
 	print 'Inspect file: {}'.format(dirname+filename)
+	f = Dataset(dirname+filename)
 	var = f.variables[varnam] # nt,yb,xb
         count = 0 # time step to inspect
         var = np.squeeze(var[count,:,:]) # 1-dimensional
@@ -96,9 +108,9 @@ elif type == 'ssh':
 elif type == 'u2d':
 	varnam = 'vobtcrtx'
 	source = 'ORCA0083'
-	filename = region + '_spl_vel_bdyU_y1979m11.nc'
+	filename = filelist['fu'] #region + '_bdyU_y1979m11.nc'
+	print 'Inspect file: {}'.format(dirname+filename)	
 	f = Dataset(dirname+filename)
-	print 'Inspect file: {}'.format(dirname+filename)
 	var = f.variables[varnam] # nt,yb,xb
         count = 0 # time step to inspect
         var = np.squeeze(var[count,:,:]) # 1-dimensional
@@ -106,9 +118,9 @@ elif type == 'u2d':
 elif type == 'u3d':
 	varnam = 'vozocrtx'
 	source = 'ORCA0083'
-	filename = region + '_spl_vel_bdyU_y1979m11.nc'
-	f = Dataset(dirname+filename)
+	filename = filelist['fu'] #region + '_bdyU_y1979m11.nc'
 	print 'Inspect file: {}'.format(dirname+filename)
+	f = Dataset(dirname+filename)
 	#var = f.variables['vozocrtx'][:] # nt,nz,yb,xb
 	var = f.variables[varnam][:] # nt,nz,yb,xb
         count = 0 # time step to inspect
@@ -119,9 +131,9 @@ elif type == 'tra':
 	varnam = 'votemper'
 	varnam = 'vosaline'
 	source = 'ORCA0083'
-	filename = region + '_spl_vel_bdyT_y1979m11.nc'
-	f = Dataset(dirname+filename)
+	filename = filelist['ft'] #region + '_bdyT_y1979m11.nc'
 	print 'Inspect file: {}'.format(dirname+filename)
+	f = Dataset(dirname+filename)
 	var = f.variables[varnam] # nt,nz,yb,xb
         count = 0 # time step to inspect
         lev = 0 # level to inspect
