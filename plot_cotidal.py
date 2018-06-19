@@ -21,7 +21,7 @@ Plot pretty cotidal chart
 ** Issues: **
 * Migrate to ShelfAssess with a config file
 
-** Usage: ** plot_cotidal.py 'AMM60' 'M2'
+** Usage: ** plot_cotidal.py 'Solent' 'AMM60' 'M2'
 """
 
 ##################### LOAD MODULES ###########################
@@ -55,18 +55,24 @@ else:
 
 levs     = np.arange(0,2.5+0.1,0.1)
 
-if len(sys.argv) >= 1:
-    source = str(sys.argv[1])
+print len(sys.argv)
+print str(sys.argv)
+if len(sys.argv) > 1:
+    region = str(sys.argv[1])
+else:
+    region = 'Solent'
+
+if len(sys.argv) > 2:
+    source = str(sys.argv[2])
 else:
     source = 'TPXO'
     #source = 'TPXO'# 'TPXO' #'AMM60'  # 'FES2014'
 
-if len(sys.argv) > 2:
-    con = str(sys.argv[2])
+if len(sys.argv) > 3:
+    con = str(sys.argv[3])
 else:
     con = 'M2'
     # conlist = ['M2'] # ['M2','S2','K2'] # constituent list
-
 
 if source == 'AMM60':
 	#dirname = '/Users/jeff/DATA/pycnmix/jelt/AMM60/'
@@ -77,11 +83,11 @@ if source == 'AMM60':
 	lat_var = 'nav_lat_grid_T'
 
 if source == 'MASSMO5':
-	dirname = rootdir+'/scratch/jelt/tmp/'
+	dirname = rootdir+'/scratch-1/jelt/tmp/'
 	#dirname = rootdir+'/work/n01/n01/jelt/MASSMO5_surge/dev_r8814_surge_modelling_Nemo4/CONFIG/MASSMO5_surge/EXP00/'
 	filename = 'MASSMO5_surge_576001_1267200_harmonic_grid_T.nc'
-	lon_var = 'nav_lon_grid_T'
-	lat_var = 'nav_lat_grid_T'
+	lon_var = 'nav_lon'
+	lat_var = 'nav_lat'
 
 
 elif source =='TPXO':
@@ -132,6 +138,7 @@ def plot_amp_pha( pj, X, Y, amp, pha, levs, label) :
 
 ###################### LOAD DATA ############################
 
+print 'file: {}'.format(dirname+filename)
 f = Dataset( dirname+filename )
 #print f.variables
 
@@ -143,35 +150,33 @@ if source == 'FES2014':
 	# convert 1D axes into 2D arrays
  	nav_lon, nav_lat = np.meshgrid(nav_lon, nav_lat)
 
-Lonmin = np.min( nav_lon ); Lonmax = np.max(nav_lon) ## min and max lon
-Latmin = np.min( nav_lat ); Latmax = np.max(nav_lat) ## min and max lat
-
-#print 'Lat:',Latmin, Latmax
-#print 'Lon:',Lonmin, Lonmax
-
 # set lat lon limits
-print 'Solent view'
 
-if source == 'AMM60':
-	#Latmin = 50.5; Latmax = 50.9
-	#Lonmin = -1.69; Lonmax = -1.00
-	Lonmin = -3.69; Lonmax = -0.1
-	Latmin = 48.9; Latmax = 51.9
+if region == 'Solent':
 
-elif source == 'MASSMO5':
-	Lonmin = 2.7596083; Lonmax = 40.764503
-	Latmin = 73.065506; Latmax = 79.086868
+    Lonmin = 356.31; Lonmax = 359.9
+    Latmin = 48.9; Latmax = 51.9
 
-elif source == 'TPXO':
-	Lonmin = 356.31; Lonmax = 359.9
-	Latmin = 48.9; Latmax = 51.9
+    if source == 'AMM60':
 
-elif source == 'FES2014':
-	Lonmin = 356.31; Lonmax = 359.9
-	Latmin = 48.9; Latmax = 51.9
+        #Latmin = 50.5; Latmax = 50.9
+        #Lonmin = -1.69; Lonmax = -1.00
+        Lonmin = -3.69; Lonmax = -0.1
+        Latmin = 48.9; Latmax = 51.9
 
 
+#elif region == 'MASSMO5':
+#
+#    	Lonmin = 2.7596083; Lonmax = 40.764503
+#    	Latmin = 73.065506; Latmax = 79.086868
 
+else:
+
+    Lonmin = np.min( nav_lon ); Lonmax = np.max(nav_lon) ## min and max lon
+    Latmin = np.min( nav_lat ); Latmax = np.max(nav_lat) ## min and max lat
+
+print 'Lat limits:',Latmin, Latmax
+print 'Lon limits:',Lonmin, Lonmax
 
 ###################### CORE CODE ############################
 
@@ -221,8 +226,8 @@ if __name__ == '__main__':
 
 
     if source == 'MASSMO5':
-        ssh_amp = f.variables[con+'amp_ssh'][:]
-        ssh_pha = f.variables[con+'pha_ssh'][:]
+        ssh_amp = np.squeeze(f.variables[con+'amp_ssh'][:])
+        ssh_pha = np.squeeze(f.variables[con+'pha_ssh'][:])
 
     if source == 'FES2014':
         ssh_amp = f.variables['amplitude'][:]/100. # convert units to metres
@@ -231,25 +236,42 @@ if __name__ == '__main__':
 
     # DEFINE FIGURES AND SUBGRID
     fig = plt.figure( figsize = ( 8.4, 2+10*(Latmax-Latmin)/(Lonmax-Lonmin) ) )
-    gs  = gridspec.GridSpec( 1, 1 ); gs.update( wspace=0.2, hspace=0.1, top = 0.78, bottom = 0.15, left = 0.01, right = 0.99 )
+    gs  = gridspec.GridSpec( 1, 1 ); gs.update( wspace=0.2, hspace=0.1, top = 0.78, bottom = 0.15, left = 0.01, right = 0.92 )
 
     ## DEFINE AND PLOT BASEMAP PROJECTION
     ax = plt.subplot( gs[0] )
-    #pj = Basemap( projection='cyl', llcrnrlat=Latmin, urcrnrlat=Latmax, \
-    pj = Basemap( projection='tmerc',lon_0=0.,lat_0=52., llcrnrlat=Latmin, urcrnrlat=Latmax, \
-                                    llcrnrlon=Lonmin, urcrnrlon=Lonmax, resolution='f' )
-    #pj.drawparallels(np.arange(50.,51.5,0.1)); pj.drawmeridians(np.arange(-2.,0.,0.1))
+
+    if region == 'MASSMO5':
+        pj = Basemap( projection='cyl', llcrnrlat=Latmin, urcrnrlat=Latmax, \
+                                        llcrnrlon=Lonmin, urcrnrlon=Lonmax, resolution='c' )
+        parallels = np.arange(np.floor(Latmin),np.ceil(Latmax),1)
+        pj.drawparallels(parallels,labels=[False,True,False,False])        # labels = [left,right,top,bottom]
+        meridians = np.arange(np.floor(Lonmin),np.ceil(Lonmax),10)
+        pj.drawmeridians(meridians,labels=[False,False,False,True])        # labels = [left,right,top,bottom]
+
+    elif region == 'Solent':
+
+        pj = Basemap( projection='tmerc',lon_0=0.5*(Lonmin+Lonmax),lat_0=0.5*(Latmin+Latmax), \
+                                        llcrnrlat=Latmin, urcrnrlat=Latmax, \
+                                        llcrnrlon=Lonmin, urcrnrlon=Lonmax, resolution='f' )
+        parallels = np.arange(np.floor(Latmin),np.ceil(Latmax),1)
+        pj.drawparallels(parallels,labels=[False,True,False,False])         # labels = [left,right,top,bottom]
+        meridians = np.arange(np.floor(Lonmin),np.ceil(Lonmax),1)
+        pj.drawmeridians(meridians,labels=[False,False,False,True])        # labels = [left,right,top,bottom]
+
+    else:
+        pj = Basemap( projection='tmerc',lon_0=0.5*(Lonmin+Lonmax),lat_0=0.5*(Latmin+Latmax), \
+                                        llcrnrlat=Latmin, urcrnrlat=Latmax, \
+                                        llcrnrlon=Lonmin, urcrnrlon=Lonmax, resolution='f' )
 
     plot_amp_pha( pj, X_arr, Y_arr, ssh_amp, ssh_pha, levs, label )
 
-
+    ## Colorbar title
     plt.title('amplitude (m)', fontsize=12, fontproperties=font )
 
 
     ## OUTPUT FIGURE
-    fname = "./FIGURES/"+filename.replace('.nc','_'+con+'.png')
-    if source == 'FES2014':
-        fname = "./FIGURES/"+source+'_'+filename.replace('.nc','_'+con+'.png')
+    fname = "./FIGURES/"+region+'_'+con+'_'+filename.replace('.nc','.png')
     print label,fname
     #plt.show()
     plt.savefig(fname, dpi=100)
