@@ -19,7 +19,7 @@ Plot pretty cotidal chart
 * 16 Jun 2018: convert back to non animated co-tidal charts
 
 ** Issues: **
-* None. It is amazing.
+* Migrate to ShelfAssess with a config file
 
 ** Usage: ** plot_cotidal.py 'AMM60' 'M2'
 """
@@ -73,6 +73,13 @@ if source == 'AMM60':
 	#filename = 'cutdown_AMM60_1d_20120731_20120829_D2_Tides.nc'
 	dirname = rootdir+'/projectsa/pycnmix/jelt/AMM60/'
 	filename = 'AMM60_1d_20120801_20120831_D2_Tides.nc'
+	lon_var = 'nav_lon_grid_T'
+	lat_var = 'nav_lat_grid_T'
+
+if source == 'MASSMO5':
+	dirname = rootdir+'/scratch/jelt/tmp/'
+	#dirname = rootdir+'/work/n01/n01/jelt/MASSMO5_surge/dev_r8814_surge_modelling_Nemo4/CONFIG/MASSMO5_surge/EXP00/'
+	filename = 'MASSMO5_surge_576001_1267200_harmonic_grid_T.nc'
 	lon_var = 'nav_lon_grid_T'
 	lat_var = 'nav_lat_grid_T'
 
@@ -151,11 +158,15 @@ if source == 'AMM60':
 	Lonmin = -3.69; Lonmax = -0.1
 	Latmin = 48.9; Latmax = 51.9
 
-if source == 'TPXO':
+elif source == 'MASSMO5':
+	Lonmin = 2.7596083; Lonmax = 40.764503
+	Latmin = 73.065506; Latmax = 79.086868
+
+elif source == 'TPXO':
 	Lonmin = 356.31; Lonmax = 359.9
 	Latmin = 48.9; Latmax = 51.9
 
-if source == 'FES2014':
+elif source == 'FES2014':
 	Lonmin = 356.31; Lonmax = 359.9
 	Latmin = 48.9; Latmax = 51.9
 
@@ -208,6 +219,10 @@ if __name__ == '__main__':
         ssh_pha = np.ma.masked_where( ssh==0, ssh_pha )
 
 
+
+    if source == 'MASSMO5':
+        ssh_amp = f.variables[con+'amp_ssh'][:]
+        ssh_pha = f.variables[con+'pha_ssh'][:]
 
     if source == 'FES2014':
         ssh_amp = f.variables['amplitude'][:]/100. # convert units to metres
