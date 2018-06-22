@@ -1,4 +1,15 @@
-# wind field
+# get_ERAint_windspeed_for_AMM60.py
+#
+# Extract compute and save ERAinterm wind on AMM60 grid:
+# 1. load in the ERAinterim wind used for AMM60.
+# 2. Compute the mean speed over the simulation period (Jun-Aug 2012)
+# 3. interpolate onto AMM60 grid
+# 4. save as a netcdf file
+# 
+# Note: used in internaltideharmonics_NEMO-integrated.ipynb
+# 
+# jpolton 22/06/18
+
 
 def time_fn( time_counter, time_origin ):
 
@@ -18,12 +29,17 @@ from netCDF4 import Dataset
 import numpy as np
 import datetime
 import matplotlib.pyplot as plt  # plotting
+import sys # daving filename to output metadata
+
+# output directory and filename
+dir_out = '/work/n01/n01/jelt//NEMO/NEMOGCM_jdha/dev_r4621_NOC4_BDY_VERT_INTERP/NEMOGCM/CONFIG/XIOS_AMM60_nemo_harmPOLCOMS/EXP00/OUTPUT/'
+file_out = 'ERAint_jun-aug2012_spd.nc'
 
 # load met data
-dirname = '/work/n01/n01/kariho40/NEMO/FORCINGS/ATM/ERAint/'
-filename = 'ggas_y2012.nc'
+dir_met = '/work/n01/n01/kariho40/NEMO/FORCINGS/ATM/ERAint/'
+file_met = 'ggas_y2012.nc'
 
-f = Dataset(dirname+filename)
+f = Dataset(dir_met+file_met)
 
 #U10 = f.variables['U10'][:] # nt,ny,nx
 #V10 = f.variables['V10'][:] # nt,ny,nx
@@ -36,15 +52,16 @@ f = Dataset(dirname+filename)
 
 # load AMM60 grid
 #dirname = '/projectsa/pycnmix/jelt/AMM60/'
-dirname = '/work/n01/n01/jelt//NEMO/NEMOGCM_jdha/dev_r4621_NOC4_BDY_VERT_INTERP/NEMOGCM/CONFIG/XIOS_AMM60_nemo_harmPOLCOMS/EXP00/OUTPUT/'
-filename = 'AMM60_1d_20120801_20120831_D2_Tides.nc'
+dir_mod = '/work/n01/n01/jelt//NEMO/NEMOGCM_jdha/dev_r4621_NOC4_BDY_VERT_INTERP/NEMOGCM/CONFIG/XIOS_AMM60_nemo_harmPOLCOMS/EXP00/OUTPUT/'
+file_mod = 'AMM60_1d_20120801_20120831_D2_Tides.nc'
 
-fAMM60 = Dataset(dirname+filename)
+fAMM60 = Dataset(dir_mod+file_mod)
 
 nav_lat_grid_T = fAMM60.variables['nav_lat_grid_T'][:] # my, mx
 nav_lon_grid_T = fAMM60.variables['nav_lon_grid_T'][:] # my, mx
 nav_lat_grid_T[nav_lat_grid_T==0] = np.nan
 nav_lon_grid_T[nav_lat_grid_T==0] = np.nan
+
 
 latbounds = [np.nanmin(nav_lat_grid_T.flatten()), np.nanmax(nav_lat_grid_T.flatten())]
 lonbounds = [np.nanmin(nav_lon_grid_T.flatten()), np.nanmax(nav_lon_grid_T.flatten())]
@@ -59,8 +76,7 @@ time_units =  "days since 2012-01-01 00:00:00"
 
 # latitude lower and upper index
 latli,latui = np.sort([np.argmin( np.abs( lat - latbounds[i] ) ) for i in range(2)])
-#latli = np.argmin( np.abs( lat - latbounds[0] ) )
-#latui = np.argmin( np.abs( lat - latbounds[1] ) )
+print 'NB the lat coords in the met data are indexed from north to south'
 
 # longitude lower and upper index
 lonli = np.argmin( np.abs( lon - lonbounds[0] ) )
@@ -86,33 +102,109 @@ V10 = f.variables['V10'][ tli:tui , latli:latui , lonli:lonui ]
 spd = np.mean(np.sqrt( U10*U10 + V10*V10 ), axis=0)
 
 lon_sub = lon[lonli:lonui]
-lat_sub = lat[latli:latui]
+lat_sub = lat[latli:latui] 
 
 # Interpolate onto AMM60 grid
 from scipy import interpolate
 yy,xx = np.meshgrid(lat_sub, lon_sub)
 
 
-z_dense_smooth_griddata = interpolate.griddata(np.array([xx.ravel(),yy.ravel()]).T, spd.ravel(),
-                                          np.array([nav_lon_grid_T.ravel(),nav_lat_grid_T.ravel()]).T, method='linear')  
-z = np.reshape(z_dense_smooth_griddata, np.shape(nav_lon_grid_T) )
+
+fn = interpolate.interp2d(lon_sub,lat_sub, spd, kind='linear')
+
+spd_flat = [fn(  nav_lon_grid_T.ravel()[i], nav_lat_grid_T.ravel()[i]  ) for i in range(len(nav_lon_grid_T.ravel()))]
+spd_AMM60 = np.reshape(spd_flat, np.shape(nav_lon_grid_T) )
+
+spd_AMM60[np.isnan(nav_lat_grid_T)] = np.nan
 
 #f = interpolate.interp2d(yy, xx, spd, kind='linear')
 #spd_new = f(nav_lat_grid_T, nav_lon_grid_T)
 
 # Plot image of speed data
-plt.subplot(2,1,1)
-plt.pcolormesh(np.ma.masked_where(np.isnan(z),z))
+plt.subplot(3,1,1)
+plt.pcolormesh(np.ma.masked_where(np.isnan(spd_AMM60),spd_AMM60))
 plt.clim([0,9])
 #plt.pcolormesh(nav_lon_grid_T, nav_lat_grid_T,z)
 plt.colorbar()
-plt.subplot(2,1,2)
+
+plt.subplot(3,1,2)
 plt.pcolormesh(lon_sub, lat_sub, spd)
+plt.colorbar()
+
+plt.subplot(3,1,3)
+plt.pcolormesh(nav_lon_grid_T, nav_lat_grid_T, spd_AMM60)
 plt.colorbar()
 plt.show()
 
 # Save limited area to netcdf file.
+print 'Saving to {}'.format( file_out )
 
+########################################################
+# Open files and create dimensions and variable handles
+
+dout = Dataset(dir_out+file_out, 'w', format='NETCDF4_CLASSIC')
+
+din = fAMM60
+nx = len(din.dimensions['x_grid_T'])
+ny = len(din.dimensions['y_grid_T'])
+
+## Create dimensions
+lon_h = dout.createDimension('x', nx)
+lat_h = dout.createDimension('y', ny)
+
+
+## Create coordinate variables for 3-dimensions
+longitudes = dout.createVariable('nav_lon_grid_T', np.float32, ('y','x',))
+latitudes = dout.createVariable('nav_lat_grid_T', np.float32, ('y','x',))
+
+# copy all the lon and lat attributes, and time
+var = din.variables['nav_lon_grid_T']
+for attr in var.ncattrs():
+#    print attr, '=', getattr(var, attr)
+    setattr(longitudes,attr,getattr(var,attr))
+
+var = din.variables['nav_lat_grid_T']
+for attr in var.ncattrs():
+#    print attr, '=', getattr(var, attr)
+    setattr(latitudes,attr,getattr(var,attr))
+
+
+###########################################################################
+## Create the 2d wind speed variable
+
+spd_h = dout.createVariable('spd', np.float32, ('y','x'))
+spd_h.units = 'm/s'
+spd_h.standard_name = 'wind speed at 10m'
+spd_h.long_name = 'average wind speed at 10m from 1-Jun-2012 : 31-Aug-2012'
+
+
+## Populate coordinate variables
+latitudes[:] = din.variables['nav_lat_grid_T'][:]
+longitudes[:] = din.variables['nav_lon_grid_T'][:]
+
+#####################
+## Create variables
+
+spd_h[:] = spd_AMM60
+
+
+
+# Create global attributes
+import time
+dout.description = 'description'
+dout.title = 'ocean T grid variables'
+dout.Conventions = 'CF-1.5'
+dout.production = 'jelt: '+sys.argv[0]
+dout.history = 'Created ' + time.ctime(time.time())
+dout.source = dir_met + '/' + file_met
+
+#from netCDF4 import chartostring
+#print chartostring(constit[:])
+
+################
+# Write the file
+din.close()
+dout.close()
 
 # scratch
 #latbounds = [ 40 , 43 ]
