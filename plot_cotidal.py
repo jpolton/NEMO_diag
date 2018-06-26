@@ -83,7 +83,7 @@ if source == 'AMM60':
 	lat_var = 'nav_lat_grid_T'
 
 if source == 'MASSMO5':
-	dirname = rootdir+'/scratch-1/jelt/tmp/'
+	dirname = rootdir+'/scratch/jelt/tmp/'
 	#dirname = rootdir+'/work/n01/n01/jelt/MASSMO5_surge/dev_r8814_surge_modelling_Nemo4/CONFIG/MASSMO5_surge/EXP00/'
 	filename = 'MASSMO5_surge_576001_1267200_harmonic_grid_T.nc'
 	lon_var = 'nav_lon'
