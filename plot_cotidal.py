@@ -53,7 +53,7 @@ else:
 
 #################### USR PARAMETERS ##########################
 
-levs     = np.arange(0,2.5+0.1,0.1)
+levs     = np.arange(0,4.0+0.1,0.1)
 
 print len(sys.argv)
 print str(sys.argv)
@@ -115,9 +115,10 @@ def plot_amp_pha( pj, X, Y, amp, pha, levs, label) :
     ## Shade basic plot. Create colorbar and nan color
     cmap0 = plt.cm.get_cmap('Spectral_r', 256)
     cmap0.set_bad('#9b9b9b', 1.0)
-    cset  = pj.pcolormesh( xx, yy, amp, cmap = cmap0 )
+#    cset  = pj.pcolormesh( xx, yy, amp, cmap = cmap0 )
 #    cset  = pj.contourf( xx, yy, amp, cmap = cmap0 )
-#    cset  = pj.contourf( xx, yy, amp, levels=levs, cmap = cmap0 )
+    cset  = pj.contourf( xx, yy, amp, levels=levs, cmap = cmap0 )
+    cset2  = pj.contour( xx, yy, amp, levels=np.arange(levs[0],levs[-1],0.5), colors='k' )
     cset.set_clim([levs[0],levs[-1]])
 
     ## contour phase
@@ -133,7 +134,7 @@ def plot_amp_pha( pj, X, Y, amp, pha, levs, label) :
 
     ## Colorbar
     cax  = plt.axes([0.2, 0.08, 0.6, 0.02])
-    cbar = plt.colorbar( cset, cax=cax, orientation='horizontal', extend='both'  )
+    cbar = plt.colorbar( cset, cax=cax, orientation='horizontal', extend='max'  )
     cbar.ax.tick_params( labelsize=12 )
 
 ###################### LOAD DATA ############################
