@@ -355,6 +355,7 @@ fname = dstdir + 'internaltideharmonics_NEMO_' + 'deepinteps_' + config + '.png'
 plt.savefig(fname) 
 
 
+
 ## Plot Harmonic components Budget. Whole domain
 ###################
 fig = plt.figure()
@@ -494,4 +495,26 @@ for iconst in range(9):
 	budget_term_logplot(331+iconst, [-10**1,10**1], divF_bc+divF_bt+D+C_bt, iconst,constit_list, 'divF_bc+divF_bt+D+C_bt', 3)
 ## Save output
 fname = dstdir +'internaltideharmonics_NEMO_sums_by_component.png'
+plt.savefig(fname)
+
+
+## Plot harmonic totals for each components. Whole domain
+###################
+
+fig = plt.figure()
+plt.rcParams['figure.figsize'] = (20.0, 20.0)
+
+var_arr = [ divF_bt,  ugradp_bt,  D,         divF_bc,   C_bt,      ugradp_bc,   advKE   , prodKE]
+var_lst = ['divF_bt', 'ugradpt', 'D      ', 'divF_bc', 'C_bt   ', 'ugradpc' ,  'advKE  ','prodKE ' ]
+
+for ind in range(len(var_arr)):
+	print var_lst[ind], np.nanmean(var_arr[ind].flatten())
+
+	ax = fig.add_subplot(331+ind)
+	clim = [-10**1,10**1]
+	[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, np.sum(var_arr[ind],axis=0), clim, var_lst[ind], logthresh=3 )
+	#plt.title('all: D+C_bt+divF_bt+divF_bc, W/m^2')
+	plt.xlabel('long'); plt.ylabel('lat')
+## Save output
+fname = dstdir +'internaltideharmonics_NEMO_harmtotals_all_components.png'
 plt.savefig(fname)
