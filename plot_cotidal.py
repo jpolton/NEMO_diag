@@ -115,9 +115,9 @@ def plot_amp_pha( pj, X, Y, amp, pha, levs, label) :
     ## Shade basic plot. Create colorbar and nan color
     cmap0 = plt.cm.get_cmap('Spectral_r', 256)
     cmap0.set_bad('#9b9b9b', 1.0)
-#    cset  = pj.pcolormesh( xx, yy, amp, cmap = cmap0 )
+    cset  = pj.pcolormesh( xx, yy, amp, cmap = cmap0 )
 #    cset  = pj.contourf( xx, yy, amp, cmap = cmap0 )
-    cset  = pj.contourf( xx, yy, amp, levels=levs, cmap = cmap0 )
+#    cset  = pj.contourf( xx, yy, amp, levels=levs, cmap = cmap0 )
     cset2  = pj.contour( xx, yy, amp, levels=np.arange(levs[0],levs[-1],0.5), colors='k' )
     cset.set_clim([levs[0],levs[-1]])
 
