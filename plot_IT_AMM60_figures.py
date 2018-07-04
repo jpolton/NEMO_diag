@@ -1,16 +1,18 @@
 # plot_IT_AMM60_figures.py
 
-
+import sys
 from netCDF4 import Dataset
 import numpy as np
 import matplotlib.pyplot as plt  # plotting
 import matplotlib.colors as mc   # fancy symetric colours on log scale
 import matplotlib.cm as cm   # colormap functionality
 import seaborn as sns # cyclic colormap for harmonic phase
+sys.path.insert(0, "/login/jelt/python/ipynb/NEMO/")
+#from internaltideharmonics_NEMO import internaltideharmonics_NEMO as ITh
 import internaltideharmonics_NEMO as ITh
 import numpy.ma as ma # masks
 
-%matplotlib inline
+##%matplotlib inline
 
 ##################################################################################
 ## Plot the div F as u.gradp terms
@@ -22,8 +24,18 @@ def budget_term_logplot(panel, clim, var, iconst, constit_list, label, logth):
 	#plt.xlabel('long'); plt.ylabel('lat')
 	return
 
+def celt_budget_term_logplot(panel, maskval, clim, var, iconst, constit_list, label, logth):
+	ax = fig.add_subplot(panel)
+	[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, ma.masked_where(APE[iconst,:,:]<maskval,var[iconst,:,:]), clim, label, logthresh=logth )
+	plt.title(constit_list[iconst]+':'+label+' W/m^2')
+	#plt.xlabel('long'); plt.ylabel('lat')
+	plt.contour( nav_lon_grid_T, nav_lat_grid_T, H, levels=[0,200], colors='k')
+	plt.xlim(-13, -0)
+	plt.ylim(46, 53)
+	return
 ##################################################################################
-
+## Setting and paths
+##################################################################################
 
 config = 'AMM60'
 #config = 'AMM7'
@@ -32,6 +44,7 @@ cutdown = ''
 iday = 1
 
 [rootdir, dirname, dstdir] = ITh.get_dirpaths(config)
+dstdir = dstdir + 'v2/'
 
 if config == 'AMM60':
     #filename = rootdir + dirname + 'AMM60_1d_20120601_20120630_processed.nc'
@@ -47,15 +60,14 @@ din2 = Dataset(filename.replace('processed','processed_part2'))
 
 [constit_list, period_list ] = ITh.harmonictable(dirname+'../harmonics_list.txt')
 
-
+##################################################################################
 ## Load variables
+##################################################################################
 
 C_bt = din.variables['C_bt'][:]
 #C_tot = din.variables['C_tot'][:]
 D = din.variables['D'][:] #*(-1)
-if(1): #if np.nanmin(D) < 0:
-	print 'NB Applied sign fix to D. D should be positive.'
-	print 'Mean D = {}'.format(np.nanmean(D.flatten()))
+# issue with nan'ed data where it was of unexpected sign. Will set it to zero.
 
 APE = din.variables['APE'][:]
 KE_bt = din.variables['KE_bt'][:]
@@ -102,12 +114,20 @@ prodKE = din2.variables['prodKE'][:]
 ugradp_bt = din2.variables['ugradpbt'][:]
 ugradp_bc = din2.variables['ugradpbc'][:]
 
+##################################################################################
+## Fix mask issues
+##################################################################################
+
 # mask land
 I_land = [divF_bt==0]
 
 C_bt[I_land] = np.nan
 #C_tot[I_land] = np.nan
+
+# issue with nan'ed data where it was of unexpected sign. Treat that here. Set it to zero.
+D[np.isnan(D)] = 0
 D[I_land] = np.nan
+D = np.ma.masked_where(divF_bt==0, D)
 
 Fu_bt[I_land] = np.nan
 Fv_bt[I_land] = np.nan
@@ -130,16 +150,15 @@ ugradp_bt = np.ma.masked_where(np.isnan(ugradp_bt), ugradp_bt)
 #Fu_bt[np.isnan(Fu_bt)] = 0
 #Fv_bt[np.isnan(Fv_bt)] = 0
 
+##################################################################################
+## Start plots
+##################################################################################
+## make a dummy figure to sort spacing out
+fig = plt.figure()
+plt.rcParams['figure.figsize'] = (15.0, 15.0)
 
 ## Plot div F as u.grad p terms
 ###############################
-
-#load lat and lon and time
-nav_lat_grid_T = din2.variables['nav_lat_grid_T'][:] # (y,x)
-nav_lon_grid_T = din2.variables['nav_lon_grid_T'][:] # (y,x)
-
-H = din.variables['H'][:] # (y,x)
-
 
 ## M2
 constit = 'M2'
@@ -148,7 +167,6 @@ iconst = constit_list.index(constit)
 fig = plt.figure()
 plt.rcParams['figure.figsize'] = (15.0, 15.0)
 budget_term_logplot(111, [-10**1,10**1], ugradp_bt, iconst,constit_list, 'u.gradp_bt', 3)
-
 ## Save output
 fname = dstdir +'internaltideharmonics_NEMO_ugradpbt_' + constit + '_' + config + '.png'
 plt.savefig(fname)
@@ -157,10 +175,36 @@ plt.savefig(fname)
 fig = plt.figure()
 plt.rcParams['figure.figsize'] = (15.0, 15.0)
 budget_term_logplot(111, [-10**1,10**1], ugradp_bc, iconst,constit_list, 'u.gradp_bc', 3)
-
 ## Save output
 fname = dstdir +'internaltideharmonics_NEMO_ugradpbc_' + constit + '_' + config + '.png'
 plt.savefig(fname)
+
+
+fig = plt.figure()
+plt.rcParams['figure.figsize'] = (15.0, 15.0)
+budget_term_logplot(111, [-10**1,10**1], divF_bt, iconst,constit_list, 'divF_bt', 3)
+## Save output
+fname = dstdir +'internaltideharmonics_NEMO_divFbt_' + constit + '_' + config + '.png'
+plt.savefig(fname)
+
+
+fig = plt.figure()
+plt.rcParams['figure.figsize'] = (15.0, 15.0)
+budget_term_logplot(111, [-10**1,10**1], divF_bc, iconst,constit_list, 'divF_bc', 3)
+## Save output
+fname = dstdir +'internaltideharmonics_NEMO_divFbc_' + constit + '_' + config + '.png'
+plt.savefig(fname)
+
+
+## Plot the difference between u.grad p_bt and divF_bt
+fig = plt.figure()
+plt.rcParams['figure.figsize'] = (15.0,7.0)
+budget_term_logplot(121, [-10**1,10**1], divF_bt-ugradp_bt, iconst,constit_list, 'divF-u.gradp bt', 3)
+budget_term_logplot(122, [-10**1,10**1], divF_bc-ugradp_bc, iconst,constit_list, 'divF-u.gradp bc', 3)
+## Save output
+fname = dstdir +'internaltideharmonics_NEMO_diff_divF_' + constit + '_' + config + '.png'
+plt.savefig(fname)
+
 
 
 ## Plot Barotropic fluxes for different species.
@@ -246,4 +290,208 @@ for count in range(len(index_dic['label'])):
 	plt.savefig(fname)
 
 
+## Plot C_bt
+######################
 
+constit = 'M2'
+iconst = constit_list.index(constit)
+
+
+
+fig = plt.figure()
+plt.rcParams['figure.figsize'] = (15.0, 15.0)
+
+
+#ax = fig.add_subplot(221)
+#clim = [-10**-4,10**-4]
+#[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, C_tot[iconst,:,:], clim, 'C_tot', logthresh=10 )
+#plt.title(constit+': Barotropic to baroclinic tidal energy conversion rate, C_tot, W/m^2')
+#plt.xlabel('long'); plt.ylabel('lat')
+
+ax = fig.add_subplot(222)
+clim = [-10**1,10**1]
+[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, C_bt[iconst,:,:], clim, 'C_bt', logthresh=3 )
+plt.title(constit+': C_bt, W/m^2')
+plt.xlabel('long'); plt.ylabel('lat')
+
+#ax = fig.add_subplot(223)
+#clim = [-10**-3,10**-3]
+#[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, C_tot[iconst,:,:], clim, 'C_tot', logthresh=7 )
+#plt.title(constit+': Barotropic to baroclinic tidal energy conversion rate, C_tot, W/m^2')
+#plt.xlabel('long'); plt.ylabel('lat')
+#plt.xlim(-13, -3)
+#plt.ylim(46, 53)
+
+ax = fig.add_subplot(224)
+clim = [-10**1,10**1]
+[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, C_bt[iconst,:,:], clim, 'C_bt', logthresh=3 )
+plt.title(constit+': C_bt, W/m^2')
+plt.xlabel('long'); plt.ylabel('lat')
+plt.xlim(-13, -3)
+plt.ylim(46, 53)
+
+
+## Save output
+fname = dstdir +'internaltideharmonics_NEMO_C_bt' + constit + '_' + config + '.png'
+plt.savefig(fname)
+
+
+## Plot Barotropic fluxes for different species. Whole domain
+#############################################################
+
+fig = plt.figure()
+plt.rcParams['figure.figsize'] = (7.0, 7.0)
+
+fig = plt.figure()
+plt.rcParams['figure.figsize'] = (15.0, 15.0)
+
+clim = [-10**1,10**1]
+[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, minteps_deep, clim, 'minteps_deep', logthresh=3 )
+plt.title('Beneath pycnocline time mean depth int epsilon25h [W/m^2]')
+plt.xlabel('long'); plt.ylabel('lat')
+
+## Save output
+fname = dstdir + 'internaltideharmonics_NEMO_' + 'deepinteps_' + config + '.png'
+plt.savefig(fname) 
+
+
+## Plot Harmonic components Budget. Whole domain
+###################
+fig = plt.figure()
+plt.rcParams['figure.figsize'] = (15.0, 7.0)
+
+## M2
+iconst = constit_list.index('M2')
+budget_term_logplot(421, [-10**1,10**1], divF_bt, iconst,constit_list, 'divF_bt', 3)
+budget_term_logplot(423, [-10**1,10**1], D, iconst,constit_list, 'D', 3)
+budget_term_logplot(425, [-10**1,10**1], C_bt, iconst,constit_list, 'C_bt', 3)
+budget_term_logplot(427, [-10**1,10**1], divF_bc, iconst,constit_list, 'divF_bc', 3)
+
+## S2
+iconst = constit_list.index('S2')
+budget_term_logplot(422, [-10**1,10**1], divF_bt, iconst,constit_list, 'divF_bt', 3)
+budget_term_logplot(424, [-10**1,10**1], D, iconst,constit_list, 'D', 3)
+budget_term_logplot(426, [-10**1,10**1], C_bt, iconst,constit_list, 'C_bt', 3)
+budget_term_logplot(428, [-10**1,10**1], divF_bc, iconst,constit_list, 'divF_bc', 3)
+
+## Save output
+fname = dstdir +'internaltideharmonics_NEMO_budget_terms_' + config + '.png'
+plt.savefig(fname)
+
+
+## K2: Plot budget by components K2
+fig = plt.figure()
+plt.rcParams['figure.figsize'] = (15.0, 15.0)
+constit = 'K2'
+iconst = constit_list.index(constit)
+budget_term_logplot(221, [-10**1,10**1], divF_bt, iconst,constit_list, 'divF_bt', 3)
+budget_term_logplot(222, [-10**1,10**1], D, iconst,constit_list, 'D', 3)
+budget_term_logplot(223, [-10**1,10**1], C_bt, iconst,constit_list, 'C_bt', 3)
+budget_term_logplot(224, [-10**1,10**1], divF_bc, iconst,constit_list, 'divF_bc', 3)
+## Save output
+fname = dstdir +'internaltideharmonics_NEMO_budget_terms_' + constit + '.png'
+plt.savefig(fname)
+
+
+## Plot Harmonic components Budget. Celtic Sea
+###################
+
+
+fig = plt.figure()
+plt.rcParams['figure.figsize'] = (7.0, 15.0)
+
+maskval = 0 #1 # APE value [J/m^2] to mask fields
+## M2
+iconst = constit_list.index('M2')
+celt_budget_term_logplot(421,maskval, [-10**1,10**1], divF_bt, iconst,constit_list, 'divF_bt', 3)
+celt_budget_term_logplot(423,maskval, [-10**1,10**1], D, iconst,constit_list, 'D', 3)
+celt_budget_term_logplot(425,maskval, [-10**1,10**1], C_bt, iconst,constit_list, 'C_bt', 3)
+lons4 = [-10, 0]
+lats4 = [47.5, 51]
+plt.plot(lons4, lats4 ,'k')
+celt_budget_term_logplot(427,maskval, [-10**1,10**1], divF_bc, iconst,constit_list, 'divF_bc', 3)
+
+## S2
+iconst = constit_list.index('S2')
+celt_budget_term_logplot(422,maskval, [-10**1,10**1], divF_bt, iconst,constit_list, 'divF_bt', 3)
+celt_budget_term_logplot(424,maskval, [-10**1,10**1], D, iconst,constit_list, 'D', 3)
+celt_budget_term_logplot(426,maskval, [-10**1,10**1], C_bt, iconst,constit_list, 'C_bt', 3)
+celt_budget_term_logplot(428,maskval, [-10**1,10**1], divF_bc, iconst,constit_list, 'divF_bc', 3)
+## Save output
+fname = dstdir +'internaltideharmonics_NEMO_budget_terms_celtic' + config + '.png'
+plt.savefig(fname)
+
+
+## Plot Harmonic totals Budget. Whole domain
+##################################
+
+fig = plt.figure()
+plt.rcParams['figure.figsize'] = (15.0, 7.0 )
+
+## M2
+iconst = constit_list.index('M2')
+budget_term_logplot(121, [-10**1,10**1], divF_bc+divF_bt+D+C_bt, iconst,constit_list, 'sum: divF_bc+divF_bt+D+C_bt', 3)
+
+## S2
+iconst = constit_list.index('S2')
+budget_term_logplot(122, [-10**1,10**1], divF_bc+divF_bt+D+C_bt, iconst,constit_list, 'sum: divF_bc+divF_bt+D+C_bt', 3)
+
+## Save output
+fname = dstdir +'internaltideharmonics_NEMO_budget_sum_' + config + '.png'
+plt.savefig(fname)
+
+
+
+## Plot Total Budget: Sum
+###################
+fig = plt.figure()
+plt.rcParams['figure.figsize'] = (20.0, 20.0)
+
+
+ax = fig.add_subplot(221)
+clim = [-10**1,10**1]
+[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, np.sum(D+C_bt+ugradp_bt+ugradp_bc,axis=0), clim, 'D+C_tot+ugradp_bt+ugradp_bc', logthresh=3 )
+#[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, np.sum(D+C_bt+divF_bt+divF_bc,axis=0), clim, 'D+C_tot+divF_bt+divF_bc', logthresh=3 )
+plt.title('all: D+C_bt+divF_bt+divF_bc, W/m^2')
+plt.xlabel('long'); plt.ylabel('lat')
+
+ax = fig.add_subplot(222)
+clim = [-10**1,10**1]
+[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, minteps_deep, clim, 'minteps_deep', logthresh=3 )
+plt.title('Beneath pycnocline time mean depth int epsilon25h [W/m^2]')
+plt.xlabel('long'); plt.ylabel('lat')
+
+ax = fig.add_subplot(223)
+clim = [-10**1,10**1]
+[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, np.sum(D+C_bt+ugradp_bt+ugradp_bc,axis=0), clim, 'D+C_tot+ugradp_bt+ugradp_bc', logthresh=3 )
+#[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, np.sum(D+C_bt+divF_bt+divF_bc,axis=0), clim, 'D+C_tot+divF_bt+divF_bc', logthresh=3 )
+plt.title('all: D+C_bt+divF_bt+divF_bc, W/m^2')
+plt.xlabel('long'); plt.ylabel('lat')
+plt.xlim(-13, -3)
+plt.ylim(46, 53)
+
+ax = fig.add_subplot(224)
+clim = [-10**1,10**1]
+[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, minteps_deep, clim, 'minteps_deep', logthresh=3 )
+plt.title('Beneath pycnocline time mean depth int epsilon25h [W/m^2]')
+plt.xlabel('long'); plt.ylabel('lat')
+plt.xlim(-13, -3)
+plt.ylim(46, 53)
+
+
+## Save output
+fname = dstdir +'internaltideharmonics_NEMO_budget' + config + '.png'
+plt.savefig(fname)
+
+###############
+
+
+## Plot Total Budget: Sum
+###################
+fig = plt.figure()
+plt.rcParams['figure.figsize'] = (20.0, 20.0)
+for iconst in range(9):
+	budget_term_logplot(331+iconst, [-10**1,10**1], divF_bc+divF_bt+D+C_bt, iconst,constit_list, 'divF_bc+divF_bt+D+C_bt', 3)
+## Save output
+fname = dstdir +'internaltideharmonics_NEMO_sums_by_component.png'
+plt.savefig(fname)
