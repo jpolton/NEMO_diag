@@ -504,12 +504,20 @@ plt.savefig(fname)
 fig = plt.figure()
 plt.rcParams['figure.figsize'] = (20.0, 20.0)
 
-var_arr = [ divF_bt,  ugradp_bt,  D,         divF_bc,   C_bt,      ugradp_bc,   advKE   , prodKE]
-var_lst = ['divF_bt', 'ugradpt', 'D      ', 'divF_bc', 'C_bt   ', 'ugradpc' ,  'advKE  ','prodKE ' ]
+varsum_a = minteps_deep[np.newaxis,:] + ugradp_bt +  D + ugradp_bc + C_bt + advKE + prodKE
+varsum_b = minteps_deep[np.newaxis,:] + divF_bt   +  D + divF_bc + C_bt +  advKE + prodKE
+
+var_arr_a = [minteps_deep[np.newaxis,:],   ugradp_bt,  D,        C_bt,      ugradp_bc,   advKE   , prodKE,    varsum_a]
+var_lst_a = ['eps bot',                   'ugradpt',  'D      ','C_bt   ', 'ugradpc' ,  'advKE  ','prodKE ', 'varsuma' ]
+
+var_arr_b = [minteps_deep[np.newaxis,:], divF_bt,   D,         divF_bc,   C_bt,       advKE   , prodKE,    varsum_b]
+var_lst_b = ['eps bot',                 'divF_bt', 'D      ', 'divF_bc', 'C_bt   ',  'advKE  ','prodKE ', 'varsumb' ]
+
+var_arr = var_arr_a
+var_lst = var_lst_a
 
 for ind in range(len(var_arr)):
 	print var_lst[ind], np.nanmean(var_arr[ind].flatten())
-
 	ax = fig.add_subplot(331+ind)
 	clim = [-10**1,10**1]
 	[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, np.sum(var_arr[ind],axis=0), clim, var_lst[ind], logthresh=3 )
@@ -518,3 +526,16 @@ for ind in range(len(var_arr)):
 ## Save output
 fname = dstdir +'internaltideharmonics_NEMO_harmtotals_all_components.png'
 plt.savefig(fname)
+
+if(0):
+	# Pickle variables
+	import pickle
+
+	with open('objs.pkl', 'w') as f:  # Python 3: open(..., 'wb')
+	    pickle.dump(var_arr_a, f)
+
+	# Recover variables: (Note minteps wasn't size nh,ny,nx befrore)
+	f = open('objs.pkl', 'rb')
+	[minteps_deep,   ugradp_bt,  D,        C_bt,      ugradp_bc,   advKE   , prodKE,    varsum_a] = pickle.load(f)
+	f.close()
+
