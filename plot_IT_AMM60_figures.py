@@ -52,7 +52,7 @@ if config == 'AMM60':
 elif config == 'AMM7':
     filename = rootdir + dirname + cutdown + 'GA_1d_20120601_20120829_processed.nc'
 
-print 'dstdir: {}'.format(dstdir)    
+print 'dstdir: {}'.format(dstdir)
 print 'filename: {}'.format(filename)
 din = Dataset(filename)
 din2 = Dataset(filename.replace('processed','processed_part2'))
@@ -220,7 +220,7 @@ index_total = [constit_list.index(lab) for lab in constit_list]
 index_diurnal = [constit_list.index(lab) for lab in constit_list if constit_list[constit_list.index(lab)][1]=='1']
 index_semidiu = [constit_list.index(lab) for lab in constit_list if constit_list[constit_list.index(lab)][1]=='2']
 index_quatdiu = [constit_list.index(lab) for lab in constit_list if constit_list[constit_list.index(lab)][1]=='4']
-index_dic = {'label':['total', 'diurnal', 'semi-diurnal','quarter-diurnal'], 
+index_dic = {'label':['total', 'diurnal', 'semi-diurnal','quarter-diurnal'],
 		             'field':[index_total, index_diurnal, index_semidiu, index_quatdiu],
 			                   'Fbtclim':[[0,1000], [0,100],  [0,1000],     [0,100]] }
 #              'Fbtclim':[[0,4000], [0,1000],  [0,4000],     [0,100]] }
@@ -240,7 +240,7 @@ for count in range(len(index_dic['label'])):
 	plt.title(index_dic['label'][count]+': Barotropic flux')
 	## Save output
 	fname = dstdir + 'internaltideharmonics_NEMO_Fbt_' + index_dic['label'][count] + '_' + config + '.png'
-	plt.savefig(fname) 
+	plt.savefig(fname)
 
 
 ## Plot APE budgets for all species, bands and total
@@ -352,7 +352,7 @@ plt.xlabel('long'); plt.ylabel('lat')
 
 ## Save output
 fname = dstdir + 'internaltideharmonics_NEMO_' + 'deepinteps_' + config + '.png'
-plt.savefig(fname) 
+plt.savefig(fname)
 
 
 
@@ -499,10 +499,7 @@ plt.savefig(fname)
 
 
 ## Plot harmonic totals for each components. Whole domain
-###################
-
-fig = plt.figure()
-plt.rcParams['figure.figsize'] = (20.0, 20.0)
+#########################################################
 
 varsum_a = minteps_deep[np.newaxis,:] + ugradp_bt +  D + ugradp_bc + C_bt + advKE + prodKE
 varsum_b = minteps_deep[np.newaxis,:] + divF_bt   +  D + divF_bc + C_bt +  advKE + prodKE
@@ -516,26 +513,98 @@ var_lst_b = ['eps bot',                 'divF_bt', 'D      ', 'divF_bc', 'C_bt  
 var_arr = var_arr_a
 var_lst = var_lst_a
 
+
+## Plot Whole domain
+####################
+
+fig = plt.figure()
+plt.rcParams['figure.figsize'] = (20.0, 20.0)
+
 for ind in range(len(var_arr)):
 	print var_lst[ind], np.nanmean(var_arr[ind].flatten())
 	ax = fig.add_subplot(331+ind)
 	clim = [-10**1,10**1]
 	[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, np.sum(var_arr[ind],axis=0), clim, var_lst[ind], logthresh=3 )
-	#plt.title('all: D+C_bt+divF_bt+divF_bc, W/m^2')
 	plt.xlabel('long'); plt.ylabel('lat')
+	plt.contour( nav_lon_grid_T, nav_lat_grid_T, H, [0,200], colors='k' )
+
 ## Save output
 fname = dstdir +'internaltideharmonics_NEMO_harmtotals_all_components.png'
 plt.savefig(fname)
+
+
+## Plot Celtic Zoom
+###################
+
+fig = plt.figure()
+plt.rcParams['figure.figsize'] = (20.0, 20.0)
+
+for ind in range(len(var_arr)):
+	print var_lst[ind], np.nanmean(var_arr[ind].flatten())
+	ax = fig.add_subplot(331+ind)
+	clim = [-10**1,10**1]
+	[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, np.sum(var_arr[ind],axis=0), clim, var_lst[ind], logthresh=3 )
+	plt.xlabel('long'); plt.ylabel('lat')
+    plt.xlim(-13, -0)
+    plt.ylim(46, 53)
+	plt.contour( nav_lon_grid_T, nav_lat_grid_T, H, [0,200], colors='k' )
+
+## Save output
+fname = dstdir +'internaltideharmonics_NEMO_harmtotals_all_components_Celtic.png'
+plt.savefig(fname)
+
+
+
+## Plot totals by harmonic band: Whole domain
+#############################################
+
+# Define bands by constituent indices
+index_total = [constit_list.index(lab) for lab in constit_list]
+index_diurnal = [constit_list.index(lab) for lab in constit_list if constit_list[constit_list.index(lab)][1]=='1']
+index_semidiu = [constit_list.index(lab) for lab in constit_list if constit_list[constit_list.index(lab)][1]=='2']
+index_quatdiu = [constit_list.index(lab) for lab in constit_list if constit_list[constit_list.index(lab)][1]=='4']
+index_dic = {'label':['total', 'diurnal', 'semi-diurnal','quarter-diurnal'], 'field':[index_total, index_diurnal, index_semidiu, index_quatdiu]}
+
+for count in range(len(index_dic['label'])):
+	indices = index_dic['field'][count]
+	print 'band: ',index_dic['label'][count], [constit_list[ind] for ind in indices]
+
+	fig = plt.figure()
+	plt.rcParams['figure.figsize'] = (15.0, 15.0)
+
+	cmap = cm.Spectral_r
+	cmap.set_over('#840000',1.)
+	cmap.set_under('white',1.)
+
+	for ind in range(len(var_arr)):
+		print var_lst[ind], np.nanmean(var_arr[ind].flatten())
+		ax = fig.add_subplot(331+ind)
+		clim = [-10**1,10**1]
+		[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, np.sum(var_arr[ind][indices,:,:],axis=0), \
+		 				clim, var_lst[ind]+index_dic['label'][count], logthresh=3 )
+		plt.xlabel('long'); plt.ylabel('lat')
+		plt.contour( nav_lon_grid_T, nav_lat_grid_T, H, [0,200], colors='k' )
+
+	## Save output
+	fname = dstdir +'internaltideharmonics_NEMO_harmtotals_' + index_dic['label'][count] + '_' + config + '.png'
+	plt.savefig(fname)
+
+
+## Plot totals by harmonic band: Celtic domain
+##############################################
+
+
 
 if(0):
 	# Pickle variables
 	import pickle
 
 	with open('objs.pkl', 'w') as f:  # Python 3: open(..., 'wb')
-	    pickle.dump(var_arr_a, f)
+	    pickle.dump([var_arr_a, nav_lon_grid_T, nav_lat_grid_T], f)
+	    #pickle.dump(var_arr_a, f)
 
 	# Recover variables: (Note minteps wasn't size nh,ny,nx befrore)
 	f = open('objs.pkl', 'rb')
-	[minteps_deep,   ugradp_bt,  D,        C_bt,      ugradp_bc,   advKE   , prodKE,    varsum_a] = pickle.load(f)
+	#[minteps_deep,   ugradp_bt,  D,        C_bt,      ugradp_bc,   advKE   , prodKE,    varsum_a] = pickle.load(f)
+	[[minteps_deep,   ugradp_bt,  D,        C_bt,      ugradp_bc,   advKE   , prodKE,    varsum_a], nav_lon_grid_T, nav_lat_grid_T] = pickle.load(f)
 	f.close()
-
