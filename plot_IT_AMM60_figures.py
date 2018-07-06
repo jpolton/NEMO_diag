@@ -171,6 +171,7 @@ def plot_divterms(region='Whole'):
 	## Save output
 	fname = dstdir +'internaltideharmonics_NEMO_ugradpbt_' + constit + '_' + config + '.png'
 	plt.savefig(fname)
+	plt.close(fig)
 
 
 	fig = plt.figure()
@@ -179,6 +180,7 @@ def plot_divterms(region='Whole'):
 	## Save output
 	fname = dstdir +'internaltideharmonics_NEMO_ugradpbc_' + constit + '_' + config + '.png'
 	plt.savefig(fname)
+	plt.close(fig)
 
 
 	fig = plt.figure()
@@ -187,6 +189,7 @@ def plot_divterms(region='Whole'):
 	## Save output
 	fname = dstdir +'internaltideharmonics_NEMO_divFbt_' + constit + '_' + config + '.png'
 	plt.savefig(fname)
+	plt.close(fig)
 
 
 	fig = plt.figure()
@@ -195,6 +198,7 @@ def plot_divterms(region='Whole'):
 	## Save output
 	fname = dstdir +'internaltideharmonics_NEMO_divFbc_' + constit + '_' + config + '.png'
 	plt.savefig(fname)
+	plt.close(fig)
 
 
 	## Plot the difference between u.grad p_bt and divF_bt
@@ -614,7 +618,7 @@ def plot_components_and_total_by_harmonic_band(region='Whole'):
 			ax = fig.add_subplot(331+ind_term)
 			clim = [-10**1,10**1]
 			[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, np.sum(var_arr[ind_term][indices,:,:],axis=0), \
-			 				clim, var_lst[ind_term]+index_dic['label'][count], logthresh=3 )
+			 				clim, var_lst[ind_term]+' '+index_dic['label'][count], logthresh=3 )
 			plt.xlabel('long'); plt.ylabel('lat')
 			plt.contour( nav_lon_grid_T, nav_lat_grid_T, H, [0,200], colors='k' )
 			if region=='Celtic':
@@ -637,6 +641,9 @@ def plot_components_and_total_by_harmonic_band(region='Whole'):
 ################################################
 ################################################
 ################################################
+
+## Plot Barotropic fluxes by harmonic bands.
+plot_barotropic_fluxes_for_harmonic_bands(region='Whole')
 
 ## Plot APE budgets for all species and total
 plot_APE_by_harmonic_bands()
