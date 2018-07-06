@@ -151,7 +151,7 @@ if 'loadedFlag' not in locals():
 
 	#Fu_bt[np.isnan(Fu_bt)] = 0
 	#Fv_bt[np.isnan(Fv_bt)] = 0
-	
+
 	##################################################################################
 	## Define variables for loop over
 	##################################################################################
@@ -161,10 +161,10 @@ if 'loadedFlag' not in locals():
 	varsum_b = eps_deep + divF_bt   +  D + divF_bc + C_bt +  advKE + prodKE
 
 	var_arr_a = [eps_deep,   ugradp_bt,  D,        C_bt,      ugradp_bc,   advKE   , prodKE,    varsum_a]
-	var_lst_a = ['eps bot',                   'ugradpt',  'D      ','C_bt   ', 'ugradpc' ,  'advKE  ','prodKE ', 'varsuma' ]
+	var_lst_a = ['eps bot', 'ugradpt',  'D      ','C_bt   ', 'ugradpc' ,  'advKE  ','prodKE ', 'varsuma' ]
 
-	var_arr_b = [eps_deep, divF_bt,   D,         divF_bc,   C_bt,       advKE   , prodKE,    varsum_b]
-	var_lst_b = ['eps bot',                 'divF_bt', 'D      ', 'divF_bc', 'C_bt   ',  'advKE  ','prodKE ', 'varsumb' ]
+	var_arr_b = [eps_deep,   divF_bt,   D,         divF_bc,   C_bt,       advKE   , prodKE,    varsum_b]
+	var_lst_b = ['eps bot', 'divF_bt', 'D      ', 'divF_bc', 'C_bt   ',  'advKE  ','prodKE ', 'varsumb' ]
 
 	var_arr = var_arr_a
 	var_lst = var_lst_a
@@ -233,14 +233,14 @@ def plot_divterms(region='Whole'):
 			clim, 'divF-u.gradp bt', logthresh=3 )
 	plt.xlabel('long'); plt.ylabel('lat')
 	plt.contour( nav_lon_grid_T, nav_lat_grid_T, H, [0,200], colors='k' )
-	
+
 	ax = fig.add_subplot(122)
 	clim = [-10**1,10**1]
 	[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, divF_bc[iconst,:,:]-ugradp_bc[iconst,:,:], \
 			clim, 'divF-u.gradp bc', logthresh=3 )
 	plt.xlabel('long'); plt.ylabel('lat')
 	plt.contour( nav_lon_grid_T, nav_lat_grid_T, H, [0,200], colors='k' )
-	
+
 	if(0):
 		fig = plt.figure()
 		plt.rcParams['figure.figsize'] = (15.0, 15.0)
@@ -665,6 +665,44 @@ def plot_components_and_total_by_harmonic_band(region='Whole'):
 		plt.close(fig)
 
 
+## Compute a numerical budget for the Whole Shelf
+#############################################
+
+def compute_budget(region='Whole'):
+	import numpy.ma as ma # masks
+	APE0 = 1# [J/m2] Threshold for masking terms
+
+	# Create mask
+	if region=='Celtic':
+		mask_bathy = np.array(nav_lon_grid_T > -13., dtype=int) * np.array(nav_lon_grid_T < -3. , dtype=int) \
+                * np.array(nav_lat_grid_T > 46 , dtype=int) * np.array(nav_lat_grid_T < 53 , dtype=int) \
+                * np.array(H < 200, dtype=int) * np.array(H > 10, dtype=int)
+
+	elif region=='Whole':
+		mask_bathy = np.array(nav_lon_grid_T > -10., dtype=int) * np.array(nav_lon_grid_T < -9 , dtype=int)\
+	                * np.array(nav_lat_grid_T > 49 , dtype=int) * np.array(nav_lat_grid_T < 50 , dtype=int) \
+	                * np.array(H < 200, dtype=int) * np.array(H > 10, dtype=int)
+
+	if config == 'AMM60':
+	    dx2 = (1.8E3)**2
+	elif config == 'AMM7':
+	    dx2 = (7E3)**2
+
+	print config + ' Metrics integrated over the whole domain, H<200m'
+	print '------------------------------------------------------'
+	print 'Below pyc dissipation  = {:06.2e} MW'.format(dx2*1E-6*np.nansum( ma.masked_where(mask_bathy == 0, minteps_deep).flatten() ))
+	print 'pycnocline dissipation = {:06.2e} MW'.format(dx2*1E-6*np.nansum( ma.masked_where(mask_bathy == 0, meps_pyc).flatten() ))
+	print 'total dissipation = {:06.2e} MW'.format(     dx2*1E-6*np.nansum( ma.masked_where(mask_bathy == 0, minteps).flatten() ))
+	print 'SUM: APE = {:06.2e} MJ'.format(              dx2*1E-6*np.nansum( ma.masked_where(mask_bathy == 0, np.nansum(APE,axis=0)).flatten() ))
+	print 'Following are masked with total APE < '+str(APE0)+ ' J/m2'
+	for ind in range(len(var_arr)):
+	#    print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind], np.nansum( dx2*1E-6*ma.masked_where(mask_bathy == 0, np.sum(var_arr[ind][:,:,:],axis=0)).flatten() ))
+	    print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind], np.nansum( dx2*1E-6*ma.masked_where(np.nansum(APE,axis=0)<APE0, ma.masked_where(mask_bathy == 0, np.sum(var_arr[ind][:,:,:],axis=0))).flatten() ))
+	    print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind]+'>0', np.nansum( dx2*1E-6*ma.masked_where(np.nansum(APE,axis=0)<APE0, ma.masked_where(mask_bathy == 0, 0.5*np.sum(+np.abs(var_arr[ind])+var_arr[ind][:,:,:],axis=0))).flatten() ))
+	    print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind]+'<0', np.nansum( dx2*1E-6*ma.masked_where(np.nansum(APE,axis=0)<APE0, ma.masked_where(mask_bathy == 0, 0.5*np.sum(-np.abs(var_arr[ind])+var_arr[ind][:,:,:],axis=0))).flatten() ))
+	print 'APE masked total dissipation = {:06.2e} MW'.format(     dx2*1E-6*np.nansum( ma.masked_where(np.nansum(APE,axis=0)<APE0, ma.masked_where(mask_bathy == 0, minteps)).flatten() ))
+
+
 
 
 ################################################
@@ -681,9 +719,11 @@ def plot_components_and_total_by_harmonic_band(region='Whole'):
 #plot_divterms(region='Whole')
 
 ## Plot components and total by harmonic band: Whole domain
-plot_components_and_total_by_harmonic_band(region='Whole')
-plot_components_and_total_by_harmonic_band(region='Celtic')
+#plot_components_and_total_by_harmonic_band(region='Whole')
+#plot_components_and_total_by_harmonic_band(region='Celtic')
 
+compute_budget(region='Whole')
+compute_budget(region='Celtic')
 
 
 
