@@ -501,13 +501,14 @@ plt.savefig(fname)
 ## Plot harmonic totals for each components. Whole domain
 #########################################################
 
-varsum_a = minteps_deep[np.newaxis,:] + ugradp_bt +  D + ugradp_bc + C_bt + advKE + prodKE
-varsum_b = minteps_deep[np.newaxis,:] + divF_bt   +  D + divF_bc + C_bt +  advKE + prodKE
+eps_deep = np.tile(minteps_deep[np.newaxis,:],(nh,1,1))/nh # distribute non-harmonic variables across harmonic bins.
+varsum_a = eps_deep + ugradp_bt +  D + ugradp_bc + C_bt + advKE + prodKE
+varsum_b = eps_deep + divF_bt   +  D + divF_bc + C_bt +  advKE + prodKE
 
-var_arr_a = [minteps_deep[np.newaxis,:],   ugradp_bt,  D,        C_bt,      ugradp_bc,   advKE   , prodKE,    varsum_a]
+var_arr_a = [eps_deep,   ugradp_bt,  D,        C_bt,      ugradp_bc,   advKE   , prodKE,    varsum_a]
 var_lst_a = ['eps bot',                   'ugradpt',  'D      ','C_bt   ', 'ugradpc' ,  'advKE  ','prodKE ', 'varsuma' ]
 
-var_arr_b = [minteps_deep[np.newaxis,:], divF_bt,   D,         divF_bc,   C_bt,       advKE   , prodKE,    varsum_b]
+var_arr_b = [eps_deep, divF_bt,   D,         divF_bc,   C_bt,       advKE   , prodKE,    varsum_b]
 var_lst_b = ['eps bot',                 'divF_bt', 'D      ', 'divF_bc', 'C_bt   ',  'advKE  ','prodKE ', 'varsumb' ]
 
 var_arr = var_arr_a
@@ -545,8 +546,8 @@ for ind in range(len(var_arr)):
 	clim = [-10**1,10**1]
 	[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, np.sum(var_arr[ind],axis=0), clim, var_lst[ind], logthresh=3 )
 	plt.xlabel('long'); plt.ylabel('lat')
-    plt.xlim(-13, -0)
-    plt.ylim(46, 53)
+    	plt.xlim(-13, -0)
+    	plt.ylim(46, 53)
 	plt.contour( nav_lon_grid_T, nav_lat_grid_T, H, [0,200], colors='k' )
 
 ## Save output
@@ -576,16 +577,17 @@ for count in range(len(index_dic['label'])):
 	cmap.set_over('#840000',1.)
 	cmap.set_under('white',1.)
 
-	for ind in range(len(var_arr)):
-		print var_lst[ind], np.nanmean(var_arr[ind].flatten())
-		ax = fig.add_subplot(331+ind)
+	for ind_term in range(len(var_arr)):
+		print var_lst[ind_term], np.nanmean(var_arr[ind_term].flatten())
+		ax = fig.add_subplot(331+ind_term)
 		clim = [-10**1,10**1]
-		[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, np.sum(var_arr[ind][indices,:,:],axis=0), \
-		 				clim, var_lst[ind]+index_dic['label'][count], logthresh=3 )
+		[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, np.sum(var_arr[ind_term][indices,:,:],axis=0), \
+		 				clim, var_lst[ind_term]+index_dic['label'][count], logthresh=3 )
 		plt.xlabel('long'); plt.ylabel('lat')
 		plt.contour( nav_lon_grid_T, nav_lat_grid_T, H, [0,200], colors='k' )
 
 	## Save output
+	print fname
 	fname = dstdir +'internaltideharmonics_NEMO_harmtotals_' + index_dic['label'][count] + '_' + config + '.png'
 	plt.savefig(fname)
 
