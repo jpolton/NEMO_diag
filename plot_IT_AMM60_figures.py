@@ -26,7 +26,7 @@ def budget_term_logplot(panel, clim, var, iconst, constit_list, label, logth):
 
 def celt_budget_term_logplot(panel, maskval, clim, var, iconst, constit_list, label, logth):
 	ax = fig.add_subplot(panel)
-	[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, ma.masked_where(np.sum(APE[:,:,:],axis=0)<maskval,var[iconst,:,:]), clim, label, logthresh=logth )
+	[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, ma.masked_where(np.sum(APEonH[:,:,:],axis=0)<maskval,var[iconst,:,:]), clim, label, logthresh=logth )
 	plt.title(constit_list[iconst]+':'+label+' W/m^2')
 	#plt.xlabel('long'); plt.ylabel('lat')
 	plt.contour( nav_lon_grid_T, nav_lat_grid_T, H, levels=[0,200], colors='k')
