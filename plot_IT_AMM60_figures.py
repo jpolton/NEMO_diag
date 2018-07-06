@@ -521,21 +521,21 @@ if(0):
 	plt.close(fig)
 
 
-	## Plot harmonic totals for each components. Whole domain
-	#########################################################
+## Plot harmonic totals for each components. Whole domain
+#########################################################
 
-	eps_deep = np.tile(minteps_deep[np.newaxis,:],(nh,1,1))/nh # distribute non-harmonic variables across harmonic bins.
-	varsum_a = eps_deep + ugradp_bt +  D + ugradp_bc + C_bt + advKE + prodKE
-	varsum_b = eps_deep + divF_bt   +  D + divF_bc + C_bt +  advKE + prodKE
+eps_deep = np.tile(minteps_deep[np.newaxis,:],(nh,1,1))/nh # distribute non-harmonic variables across harmonic bins.
+varsum_a = eps_deep + ugradp_bt +  D + ugradp_bc + C_bt + advKE + prodKE
+varsum_b = eps_deep + divF_bt   +  D + divF_bc + C_bt +  advKE + prodKE
 
-	var_arr_a = [eps_deep,   ugradp_bt,  D,        C_bt,      ugradp_bc,   advKE   , prodKE,    varsum_a]
-	var_lst_a = ['eps bot',                   'ugradpt',  'D      ','C_bt   ', 'ugradpc' ,  'advKE  ','prodKE ', 'varsuma' ]
+var_arr_a = [eps_deep,   ugradp_bt,  D,        C_bt,      ugradp_bc,   advKE   , prodKE,    varsum_a]
+var_lst_a = ['eps bot',                   'ugradpt',  'D      ','C_bt   ', 'ugradpc' ,  'advKE  ','prodKE ', 'varsuma' ]
 
-	var_arr_b = [eps_deep, divF_bt,   D,         divF_bc,   C_bt,       advKE   , prodKE,    varsum_b]
-	var_lst_b = ['eps bot',                 'divF_bt', 'D      ', 'divF_bc', 'C_bt   ',  'advKE  ','prodKE ', 'varsumb' ]
+var_arr_b = [eps_deep, divF_bt,   D,         divF_bc,   C_bt,       advKE   , prodKE,    varsum_b]
+var_lst_b = ['eps bot',                 'divF_bt', 'D      ', 'divF_bc', 'C_bt   ',  'advKE  ','prodKE ', 'varsumb' ]
 
-	var_arr = var_arr_a
-	var_lst = var_lst_a
+var_arr = var_arr_a
+var_lst = var_lst_a
 
 
 if(0): # DELETE ME
