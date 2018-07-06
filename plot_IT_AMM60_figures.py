@@ -64,91 +64,113 @@ din2 = Dataset(filename.replace('processed','processed_part2'))
 ## Load variables
 ##################################################################################
 
-C_bt = din.variables['C_bt'][:]
-#C_tot = din.variables['C_tot'][:]
-D = din.variables['D'][:] #*(-1)
-# issue with nan'ed data where it was of unexpected sign. Will set it to zero.
+if 'loadedFlag' not in locals():
+	C_bt = din.variables['C_bt'][:]
+	#C_tot = din.variables['C_tot'][:]
+	D = din.variables['D'][:] #*(-1)
+	# issue with nan'ed data where it was of unexpected sign. Will set it to zero.
 
-APE = din.variables['APE'][:]
-KE_bt = din.variables['KE_bt'][:]
-KE_bc = din.variables['KE_bc'][:]
+	APE = din.variables['APE'][:]
+	KE_bt = din.variables['KE_bt'][:]
+	KE_bc = din.variables['KE_bc'][:]
 
-Fu_bt = din.variables['Fu_bt'][:]
-Fv_bt = din.variables['Fv_bt'][:]
-Fu_bc = din.variables['Fu_bc'][:]
-Fv_bc = din.variables['Fv_bc'][:]
+	Fu_bt = din.variables['Fu_bt'][:]
+	Fv_bt = din.variables['Fv_bt'][:]
+	Fu_bc = din.variables['Fu_bc'][:]
+	Fv_bc = din.variables['Fv_bc'][:]
 
-divF_bt = din.variables['divF_bt'][:]
-divF_bc = din.variables['divF_bc'][:]
+	divF_bt = din.variables['divF_bt'][:]
+	divF_bc = din.variables['divF_bc'][:]
 
-minteps = din.variables['inteps'][iday,:,:]
-minteps_deep = din.variables['inteps_deep'][iday,:,:]
-meps_pyc = din.variables['eps_pyc'][iday,:,:]
-#minteps = np.mean( din.variables['inteps'][:], axis=0 )
-#minteps_deep = np.mean( din.variables['inteps_deep'][:], axis=0 )
-#meps_pyc = np.mean( din.variables['eps_pyc'][:], axis=0 )
+	minteps = din.variables['inteps'][iday,:,:]
+	minteps_deep = din.variables['inteps_deep'][iday,:,:]
+	meps_pyc = din.variables['eps_pyc'][iday,:,:]
+	#minteps = np.mean( din.variables['inteps'][:], axis=0 )
+	#minteps_deep = np.mean( din.variables['inteps_deep'][:], axis=0 )
+	#meps_pyc = np.mean( din.variables['eps_pyc'][:], axis=0 )
 
-#load lat and lon and time
-nav_lat_grid_T = din.variables['nav_lat_grid_T'][:] # (y,x)
-nav_lon_grid_T = din.variables['nav_lon_grid_T'][:] # (y,x)
-#nav_lat_grid_T = ma.masked_where(nav_lat_grid_T == 0, nav_lat_grid_T)
-#nav_lon_grid_T = ma.masked_where(nav_lat_grid_T == 0, nav_lon_grid_T)
+	#load lat and lon and time
+	nav_lat_grid_T = din.variables['nav_lat_grid_T'][:] # (y,x)
+	nav_lon_grid_T = din.variables['nav_lon_grid_T'][:] # (y,x)
+	#nav_lat_grid_T = ma.masked_where(nav_lat_grid_T == 0, nav_lat_grid_T)
+	#nav_lon_grid_T = ma.masked_where(nav_lat_grid_T == 0, nav_lon_grid_T)
 
-H = din.variables['H'][:] # (y,x)
-
-
-constit_period =  din.variables['T_p'][:]
-
-constit_chararr =  din.variables['constit'][:]
-nh = np.shape(constit_chararr)[0]
-constit_list = [ ''.join(constit_chararr[i,:]) for i in range(nh) ]
+	H = din.variables['H'][:] # (y,x)
 
 
-#C_bt = np.sum(C_bt[:,:,:], axis=0)
-#C_tot = np.sum(C_tot[:,:,:], axis=0)
-#divF_bt = np.sum(divF_bt[:,:,:], axis=0)
-#divF_bc = np.sum(divF_bc[:,:,:], axis=0)
+	constit_period =  din.variables['T_p'][:]
 
-advKE = din2.variables['advKE'][:]
-prodKE = din2.variables['prodKE'][:]
-ugradp_bt = din2.variables['ugradpbt'][:]
-ugradp_bc = din2.variables['ugradpbc'][:]
-
-##################################################################################
-## Fix mask issues
-##################################################################################
-
-# mask land
-I_land = [divF_bt==0]
-
-C_bt[I_land] = np.nan
-#C_tot[I_land] = np.nan
-
-# issue with nan'ed data where it was of unexpected sign. Treat that here. Set it to zero.
-D[np.isnan(D)] = 0
-D[I_land] = np.nan
-D = np.ma.masked_where(divF_bt==0, D)
-
-Fu_bt[I_land] = np.nan
-Fv_bt[I_land] = np.nan
-Fu_bc[I_land] = np.nan
-Fv_bc[I_land] = np.nan
-
-divF_bt[I_land] = np.nan
-divF_bc[I_land] = np.nan
-
-advKE[I_land] = np.nan
-prodKE[I_land] = np.nan
-ugradp_bt[I_land] = np.nan
-ugradp_bc[I_land] = np.nan
+	constit_chararr =  din.variables['constit'][:]
+	nh = np.shape(constit_chararr)[0]
+	constit_list = [ ''.join(constit_chararr[i,:]) for i in range(nh) ]
 
 
-ugradp_bc = np.ma.masked_where(np.isnan(ugradp_bc), ugradp_bc)
-ugradp_bt = np.ma.masked_where(np.isnan(ugradp_bt), ugradp_bt)
+	#C_bt = np.sum(C_bt[:,:,:], axis=0)
+	#C_tot = np.sum(C_tot[:,:,:], axis=0)
+	#divF_bt = np.sum(divF_bt[:,:,:], axis=0)
+	#divF_bc = np.sum(divF_bc[:,:,:], axis=0)
+
+	advKE = din2.variables['advKE'][:]
+	prodKE = din2.variables['prodKE'][:]
+	ugradp_bt = din2.variables['ugradpbt'][:]
+	ugradp_bc = din2.variables['ugradpbc'][:]
 
 
-#Fu_bt[np.isnan(Fu_bt)] = 0
-#Fv_bt[np.isnan(Fv_bt)] = 0
+	##################################################################################
+	## Fix mask issues
+	##################################################################################
+
+	# mask land
+	I_land = [divF_bt==0]
+
+	C_bt[I_land] = np.nan
+	#C_tot[I_land] = np.nan
+
+	# issue with nan'ed data where it was of unexpected sign. Treat that here. Set it to zero.
+	D[np.isnan(D)] = 0
+	D[I_land] = np.nan
+	D = np.ma.masked_where(divF_bt==0, D)
+
+	Fu_bt[I_land] = np.nan
+	Fv_bt[I_land] = np.nan
+	Fu_bc[I_land] = np.nan
+	Fv_bc[I_land] = np.nan
+
+	divF_bt[I_land] = np.nan
+	divF_bc[I_land] = np.nan
+
+	advKE[I_land] = np.nan
+	prodKE[I_land] = np.nan
+	ugradp_bt[I_land] = np.nan
+	ugradp_bc[I_land] = np.nan
+
+
+	ugradp_bc = np.ma.masked_where(np.isnan(ugradp_bc), ugradp_bc)
+	ugradp_bt = np.ma.masked_where(np.isnan(ugradp_bt), ugradp_bt)
+
+
+	#Fu_bt[np.isnan(Fu_bt)] = 0
+	#Fv_bt[np.isnan(Fv_bt)] = 0
+	
+	##################################################################################
+	## Define variables for loop over
+	##################################################################################
+
+	eps_deep = np.tile(minteps_deep[np.newaxis,:],(nh,1,1))/nh # distribute non-harmonic variables across harmonic bins.
+	varsum_a = eps_deep + ugradp_bt +  D + ugradp_bc + C_bt + advKE + prodKE
+	varsum_b = eps_deep + divF_bt   +  D + divF_bc + C_bt +  advKE + prodKE
+
+	var_arr_a = [eps_deep,   ugradp_bt,  D,        C_bt,      ugradp_bc,   advKE   , prodKE,    varsum_a]
+	var_lst_a = ['eps bot',                   'ugradpt',  'D      ','C_bt   ', 'ugradpc' ,  'advKE  ','prodKE ', 'varsuma' ]
+
+	var_arr_b = [eps_deep, divF_bt,   D,         divF_bc,   C_bt,       advKE   , prodKE,    varsum_b]
+	var_lst_b = ['eps bot',                 'divF_bt', 'D      ', 'divF_bc', 'C_bt   ',  'advKE  ','prodKE ', 'varsumb' ]
+
+	var_arr = var_arr_a
+	var_lst = var_lst_a
+
+
+	loadedFlag=1
 
 ##################################################################################
 ## Start plots
@@ -203,15 +225,38 @@ def plot_divterms(region='Whole'):
 
 	## Plot the difference between u.grad p_bt and divF_bt
 	fig = plt.figure()
-	plt.rcParams['figure.figsize'] = (15.0,7.0)
-	budget_term_logplot(121, [-10**1,10**1], divF_bt-ugradp_bt, iconst,constit_list, 'divF-u.gradp bt', 3)
-	budget_term_logplot(122, [-10**1,10**1], divF_bc-ugradp_bc, iconst,constit_list, 'divF-u.gradp bc', 3)
+	plt.rcParams['figure.figsize'] = (15.0, 7.0)
+
+	ax = fig.add_subplot(121)
+	clim = [-10**1,10**1]
+	[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, divF_bt[iconst,:,:]-ugradp_bt[iconst,:,:], \
+			clim, 'divF-u.gradp bt', logthresh=3 )
+	plt.xlabel('long'); plt.ylabel('lat')
+	plt.contour( nav_lon_grid_T, nav_lat_grid_T, H, [0,200], colors='k' )
+	
+	ax = fig.add_subplot(122)
+	clim = [-10**1,10**1]
+	[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, divF_bc[iconst,:,:]-ugradp_bc[iconst,:,:], \
+			clim, 'divF-u.gradp bc', logthresh=3 )
+	plt.xlabel('long'); plt.ylabel('lat')
+	plt.contour( nav_lon_grid_T, nav_lat_grid_T, H, [0,200], colors='k' )
+	
+	if(0):
+		fig = plt.figure()
+		plt.rcParams['figure.figsize'] = (15.0, 15.0)
+		budget_term_logplot(121, [-10**1,10**1], divF_bt-ugradp_bt, iconst,constit_list, 'divF-u.gradp bt', 3)
+		budget_term_logplot(122, [-10**1,10**1], divF_bc-ugradp_bc, iconst,constit_list, 'divF-u.gradp bc', 3)
 	## Save output
 	fname = dstdir +'internaltideharmonics_NEMO_diff_divF_' + constit + '_' \
 	+ '_' + region + config + '.png'
 	plt.savefig(fname)
 	print fname
 	plt.close(fig)
+
+
+
+
+
 	return
 
 
@@ -242,7 +287,7 @@ def plot_barotropic_fluxes_for_harmonic_bands(region='Whole'):
 		Fu = np.nansum(Fu_bt[indices,:,:],axis=0)
 		Fv = np.nansum(Fv_bt[indices,:,:],axis=0)
 
-		plt.rcParams['figure.figsize'] = (7.0, 7.0)
+		#plt.rcParams['figure.figsize'] = (7.0, 7.0)
 
 		fig = plt.figure()
 		plt.rcParams['figure.figsize'] = (15.0, 15.0)
@@ -255,7 +300,7 @@ def plot_barotropic_fluxes_for_harmonic_bands(region='Whole'):
 		print fname
 		plt.close(fig)
 
-		return
+	return
 
 ## Plot APE budgets for all species, bands and total
 #############################################################
@@ -303,7 +348,7 @@ def plot_APE_by_harmonic_bands():
 		print fname
 		plt.close(fig)
 
-
+	return
 
 if(0):
 
@@ -528,19 +573,6 @@ if(0):
 ## Plot harmonic totals for each components. Whole domain
 #########################################################
 
-eps_deep = np.tile(minteps_deep[np.newaxis,:],(nh,1,1))/nh # distribute non-harmonic variables across harmonic bins.
-varsum_a = eps_deep + ugradp_bt +  D + ugradp_bc + C_bt + advKE + prodKE
-varsum_b = eps_deep + divF_bt   +  D + divF_bc + C_bt +  advKE + prodKE
-
-var_arr_a = [eps_deep,   ugradp_bt,  D,        C_bt,      ugradp_bc,   advKE   , prodKE,    varsum_a]
-var_lst_a = ['eps bot',                   'ugradpt',  'D      ','C_bt   ', 'ugradpc' ,  'advKE  ','prodKE ', 'varsuma' ]
-
-var_arr_b = [eps_deep, divF_bt,   D,         divF_bc,   C_bt,       advKE   , prodKE,    varsum_b]
-var_lst_b = ['eps bot',                 'divF_bt', 'D      ', 'divF_bc', 'C_bt   ',  'advKE  ','prodKE ', 'varsumb' ]
-
-var_arr = var_arr_a
-var_lst = var_lst_a
-
 
 if(0): # DELETE ME
 	## Plot Whole domain
@@ -589,8 +621,8 @@ if(0): # DELETE ME
 
 
 
-## Plot components and total by harmonic band: Whole domain
-###########################################################
+## Plot components and total by harmonic band
+#############################################
 
 def plot_components_and_total_by_harmonic_band(region='Whole'):
 #def plot_components_and_total_by_harmonic_band(constit_list,var_arr,var_lst,nav_lon_grid_T,nav_lat_grid_T,H,config='AMM60'):
@@ -634,25 +666,21 @@ def plot_components_and_total_by_harmonic_band(region='Whole'):
 
 
 
-## Plot totals by harmonic band: Celtic domain
-##############################################
-
 
 ################################################
 ################################################
 ################################################
 
 ## Plot Barotropic fluxes by harmonic bands.
-plot_barotropic_fluxes_for_harmonic_bands(region='Whole')
+#plot_barotropic_fluxes_for_harmonic_bands(region='Whole')
 
 ## Plot APE budgets for all species and total
-plot_APE_by_harmonic_bands()
+#plot_APE_by_harmonic_bands()
 
 ## Plot div F as u.grad p terms, and differences
-plot_divterms(region='Whole')
+#plot_divterms(region='Whole')
 
 ## Plot components and total by harmonic band: Whole domain
-#plot_components_and_total_by_harmonic_band(constit_list,var_arr,var_lst,nav_lon_grid_T,nav_lat_grid_T,H,config='AMM60')
 plot_components_and_total_by_harmonic_band(region='Whole')
 plot_components_and_total_by_harmonic_band(region='Celtic')
 
