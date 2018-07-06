@@ -562,7 +562,8 @@ plt.savefig(fname)
 ## Plot components and total by harmonic band: Whole domain
 ###########################################################
 
-def plot_components_and_total_by_harmonic_band(constit_list,var_arr,var_lst,nav_lon_grid_T,nav_lat_grid_T,H,config='AMM60'):
+def plot_components_and_total_by_harmonic_band(region='Whole'):
+#def plot_components_and_total_by_harmonic_band(constit_list,var_arr,var_lst,nav_lon_grid_T,nav_lat_grid_T,H,config='AMM60'):
 
 	# Define bands by constituent indices
 	index_total = [constit_list.index(lab) for lab in constit_list]
@@ -590,10 +591,14 @@ def plot_components_and_total_by_harmonic_band(constit_list,var_arr,var_lst,nav_
 			 				clim, var_lst[ind_term]+index_dic['label'][count], logthresh=3 )
 			plt.xlabel('long'); plt.ylabel('lat')
 			plt.contour( nav_lon_grid_T, nav_lat_grid_T, H, [0,200], colors='k' )
+			if region=='Celtic':
+				    plt.xlim(-13, -0)
+				    plt.ylim(46, 53)
 
 		## Save output
 		print fname
-		fname = dstdir +'internaltideharmonics_NEMO_harmtotals_' + index_dic['label'][count] + '_' + config + '.png'
+		fname = dstdir +'internaltideharmonics_NEMO_harmtotals_' + index_dic['label'][count] \
+		       + '_' + region + '_' + config + '.png'
 		plt.savefig(fname)
 
 
@@ -610,7 +615,17 @@ def plot_components_and_total_by_harmonic_band(constit_list,var_arr,var_lst,nav_
 plot_divterms(constit_list,ugradp_bt,ugradp_bc,divF_bt,divF_bc,config='AMM60')
 
 ## Plot components and total by harmonic band: Whole domain
-def plot_components_and_total_by_harmonic_band(constit_list,var_arr,var_lst,nav_lon_grid_T,nav_lat_grid_T,H,config='AMM60'):
+#plot_components_and_total_by_harmonic_band(constit_list,var_arr,var_lst,nav_lon_grid_T,nav_lat_grid_T,H,config='AMM60')
+plot_components_and_total_by_harmonic_band(region='Whole')
+plot_components_and_total_by_harmonic_band(region='Celtic')
+
+
+
+
+
+
+
+
 
 if(0):
 	# Pickle variables
