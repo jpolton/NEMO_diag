@@ -205,7 +205,8 @@ def plot_divterms(constit_list,ugradp_bt,ugradp_bc,divF_bt,divF_bc,config='AMM60
 	## Save output
 	fname = dstdir +'internaltideharmonics_NEMO_diff_divF_' + constit + '_' + config + '.png'
 	plt.savefig(fname)
-
+	print fname
+	plt.close(fig)
 	return
 
 
@@ -244,7 +245,8 @@ for count in range(len(index_dic['label'])):
 	## Save output
 	fname = dstdir + 'internaltideharmonics_NEMO_Fbt_' + index_dic['label'][count] + '_' + config + '.png'
 	plt.savefig(fname)
-
+	print fname
+	plt.close(fig)
 
 ## Plot APE budgets for all species, bands and total
 #############################################################
@@ -291,7 +293,8 @@ for count in range(len(index_dic['label'])):
 	## Save output
 	fname = dstdir +'internaltideharmonics_NEMO_APE_' + index_dic['label'][count] + '_' + config + '.png'
 	plt.savefig(fname)
-
+	print fname
+	plt.close(fig)
 
 ## Plot C_bt
 ######################
@@ -333,11 +336,11 @@ plt.xlabel('long'); plt.ylabel('lat')
 plt.xlim(-13, -3)
 plt.ylim(46, 53)
 
-
 ## Save output
 fname = dstdir +'internaltideharmonics_NEMO_C_bt' + constit + '_' + config + '.png'
 plt.savefig(fname)
-
+print fname
+plt.close(fig)
 
 ## Plot Barotropic fluxes for different species. Whole domain
 #############################################################
@@ -356,7 +359,8 @@ plt.xlabel('long'); plt.ylabel('lat')
 ## Save output
 fname = dstdir + 'internaltideharmonics_NEMO_' + 'deepinteps_' + config + '.png'
 plt.savefig(fname)
-
+print fname
+plt.close(fig)
 
 
 ## Plot Harmonic components Budget. Whole domain
@@ -381,6 +385,8 @@ budget_term_logplot(428, [-10**1,10**1], divF_bc, iconst,constit_list, 'divF_bc'
 ## Save output
 fname = dstdir +'internaltideharmonics_NEMO_budget_terms_' + config + '.png'
 plt.savefig(fname)
+print fname
+plt.close(fig)
 
 
 ## K2: Plot budget by components K2
@@ -395,6 +401,8 @@ budget_term_logplot(224, [-10**1,10**1], divF_bc, iconst,constit_list, 'divF_bc'
 ## Save output
 fname = dstdir +'internaltideharmonics_NEMO_budget_terms_' + constit + '.png'
 plt.savefig(fname)
+print fname
+plt.close(fig)
 
 
 ## Plot Harmonic components Budget. Celtic Sea
@@ -424,6 +432,8 @@ celt_budget_term_logplot(428,maskval, [-10**1,10**1], divF_bc, iconst,constit_li
 ## Save output
 fname = dstdir +'internaltideharmonics_NEMO_budget_terms_celtic' + config + '.png'
 plt.savefig(fname)
+print fname
+plt.close(fig)
 
 
 ## Plot Harmonic totals Budget. Whole domain
@@ -443,7 +453,8 @@ budget_term_logplot(122, [-10**1,10**1], divF_bc+divF_bt+D+C_bt, iconst,constit_
 ## Save output
 fname = dstdir +'internaltideharmonics_NEMO_budget_sum_' + config + '.png'
 plt.savefig(fname)
-
+print fname
+plt.close(fig)
 
 
 ## Plot Total Budget: Sum
@@ -486,7 +497,8 @@ plt.ylim(46, 53)
 ## Save output
 fname = dstdir +'internaltideharmonics_NEMO_budget' + config + '.png'
 plt.savefig(fname)
-
+print fname
+plt.close(fig)
 ###############
 
 
@@ -499,6 +511,8 @@ for iconst in range(9):
 ## Save output
 fname = dstdir +'internaltideharmonics_NEMO_sums_by_component.png'
 plt.savefig(fname)
+print fname
+plt.close(fig)
 
 
 ## Plot harmonic totals for each components. Whole domain
@@ -535,6 +549,8 @@ for ind in range(len(var_arr)):
 ## Save output
 fname = dstdir +'internaltideharmonics_NEMO_harmtotals_all_components.png'
 plt.savefig(fname)
+print fname
+plt.close(fig)
 
 
 ## Plot Celtic Zoom
@@ -556,6 +572,9 @@ for ind in range(len(var_arr)):
 ## Save output
 fname = dstdir +'internaltideharmonics_NEMO_harmtotals_all_components_Celtic.png'
 plt.savefig(fname)
+print fname
+plt.close(fig)
+
 
 
 
@@ -596,10 +615,12 @@ def plot_components_and_total_by_harmonic_band(region='Whole'):
 				    plt.ylim(46, 53)
 
 		## Save output
-		print fname
 		fname = dstdir +'internaltideharmonics_NEMO_harmtotals_' + index_dic['label'][count] \
 		       + '_' + region + '_' + config + '.png'
 		plt.savefig(fname)
+		print fname
+		plt.close(fig)
+
 
 
 ## Plot totals by harmonic band: Celtic domain
