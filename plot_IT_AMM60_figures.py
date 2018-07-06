@@ -157,53 +157,56 @@ ugradp_bt = np.ma.masked_where(np.isnan(ugradp_bt), ugradp_bt)
 fig = plt.figure()
 plt.rcParams['figure.figsize'] = (15.0, 15.0)
 
-## Plot div F as u.grad p terms
-###############################
+## Plot div F as u.grad p terms, and differences
+################################################
 
-## M2
-constit = 'M2'
-iconst = constit_list.index(constit)
+def plot_divterms(constit_list,ugradp_bt,ugradp_bc,divF_bt,divF_bc,config='AMM60'):
+	## M2
+	constit = 'M2'
+	iconst = constit_list.index(constit)
 
-fig = plt.figure()
-plt.rcParams['figure.figsize'] = (15.0, 15.0)
-budget_term_logplot(111, [-10**1,10**1], ugradp_bt, iconst,constit_list, 'u.gradp_bt', 3)
-## Save output
-fname = dstdir +'internaltideharmonics_NEMO_ugradpbt_' + constit + '_' + config + '.png'
-plt.savefig(fname)
-
-
-fig = plt.figure()
-plt.rcParams['figure.figsize'] = (15.0, 15.0)
-budget_term_logplot(111, [-10**1,10**1], ugradp_bc, iconst,constit_list, 'u.gradp_bc', 3)
-## Save output
-fname = dstdir +'internaltideharmonics_NEMO_ugradpbc_' + constit + '_' + config + '.png'
-plt.savefig(fname)
+	fig = plt.figure()
+	plt.rcParams['figure.figsize'] = (15.0, 15.0)
+	budget_term_logplot(111, [-10**1,10**1], ugradp_bt, iconst,constit_list, 'u.gradp_bt', 3)
+	## Save output
+	fname = dstdir +'internaltideharmonics_NEMO_ugradpbt_' + constit + '_' + config + '.png'
+	plt.savefig(fname)
 
 
-fig = plt.figure()
-plt.rcParams['figure.figsize'] = (15.0, 15.0)
-budget_term_logplot(111, [-10**1,10**1], divF_bt, iconst,constit_list, 'divF_bt', 3)
-## Save output
-fname = dstdir +'internaltideharmonics_NEMO_divFbt_' + constit + '_' + config + '.png'
-plt.savefig(fname)
+	fig = plt.figure()
+	plt.rcParams['figure.figsize'] = (15.0, 15.0)
+	budget_term_logplot(111, [-10**1,10**1], ugradp_bc, iconst,constit_list, 'u.gradp_bc', 3)
+	## Save output
+	fname = dstdir +'internaltideharmonics_NEMO_ugradpbc_' + constit + '_' + config + '.png'
+	plt.savefig(fname)
 
 
-fig = plt.figure()
-plt.rcParams['figure.figsize'] = (15.0, 15.0)
-budget_term_logplot(111, [-10**1,10**1], divF_bc, iconst,constit_list, 'divF_bc', 3)
-## Save output
-fname = dstdir +'internaltideharmonics_NEMO_divFbc_' + constit + '_' + config + '.png'
-plt.savefig(fname)
+	fig = plt.figure()
+	plt.rcParams['figure.figsize'] = (15.0, 15.0)
+	budget_term_logplot(111, [-10**1,10**1], divF_bt, iconst,constit_list, 'divF_bt', 3)
+	## Save output
+	fname = dstdir +'internaltideharmonics_NEMO_divFbt_' + constit + '_' + config + '.png'
+	plt.savefig(fname)
 
 
-## Plot the difference between u.grad p_bt and divF_bt
-fig = plt.figure()
-plt.rcParams['figure.figsize'] = (15.0,7.0)
-budget_term_logplot(121, [-10**1,10**1], divF_bt-ugradp_bt, iconst,constit_list, 'divF-u.gradp bt', 3)
-budget_term_logplot(122, [-10**1,10**1], divF_bc-ugradp_bc, iconst,constit_list, 'divF-u.gradp bc', 3)
-## Save output
-fname = dstdir +'internaltideharmonics_NEMO_diff_divF_' + constit + '_' + config + '.png'
-plt.savefig(fname)
+	fig = plt.figure()
+	plt.rcParams['figure.figsize'] = (15.0, 15.0)
+	budget_term_logplot(111, [-10**1,10**1], divF_bc, iconst,constit_list, 'divF_bc', 3)
+	## Save output
+	fname = dstdir +'internaltideharmonics_NEMO_divFbc_' + constit + '_' + config + '.png'
+	plt.savefig(fname)
+
+
+	## Plot the difference between u.grad p_bt and divF_bt
+	fig = plt.figure()
+	plt.rcParams['figure.figsize'] = (15.0,7.0)
+	budget_term_logplot(121, [-10**1,10**1], divF_bt-ugradp_bt, iconst,constit_list, 'divF-u.gradp bt', 3)
+	budget_term_logplot(122, [-10**1,10**1], divF_bc-ugradp_bc, iconst,constit_list, 'divF-u.gradp bc', 3)
+	## Save output
+	fname = dstdir +'internaltideharmonics_NEMO_diff_divF_' + constit + '_' + config + '.png'
+	plt.savefig(fname)
+
+	return
 
 
 
@@ -556,46 +559,58 @@ plt.savefig(fname)
 
 
 
-## Plot totals by harmonic band: Whole domain
-#############################################
+## Plot components and total by harmonic band: Whole domain
+###########################################################
 
-# Define bands by constituent indices
-index_total = [constit_list.index(lab) for lab in constit_list]
-index_diurnal = [constit_list.index(lab) for lab in constit_list if constit_list[constit_list.index(lab)][1]=='1']
-index_semidiu = [constit_list.index(lab) for lab in constit_list if constit_list[constit_list.index(lab)][1]=='2']
-index_quatdiu = [constit_list.index(lab) for lab in constit_list if constit_list[constit_list.index(lab)][1]=='4']
-index_dic = {'label':['total', 'diurnal', 'semi-diurnal','quarter-diurnal'], 'field':[index_total, index_diurnal, index_semidiu, index_quatdiu]}
+def plot_components_and_total_by_harmonic_band(constit_list,var_arr,var_lst,nav_lon_grid_T,nav_lat_grid_T,H,config='AMM60'):
 
-for count in range(len(index_dic['label'])):
-	indices = index_dic['field'][count]
-	print 'band: ',index_dic['label'][count], [constit_list[ind] for ind in indices]
+	# Define bands by constituent indices
+	index_total = [constit_list.index(lab) for lab in constit_list]
+	index_diurnal = [constit_list.index(lab) for lab in constit_list if constit_list[constit_list.index(lab)][1]=='1']
+	index_semidiu = [constit_list.index(lab) for lab in constit_list if constit_list[constit_list.index(lab)][1]=='2']
+	index_quatdiu = [constit_list.index(lab) for lab in constit_list if constit_list[constit_list.index(lab)][1]=='4']
+	index_dic = {'label':['total', 'diurnal', 'semi-diurnal','quarter-diurnal'], 'field':[index_total, index_diurnal, index_semidiu, index_quatdiu]}
 
-	fig = plt.figure()
-	plt.rcParams['figure.figsize'] = (15.0, 15.0)
+	for count in range(len(index_dic['label'])):
+		indices = index_dic['field'][count]
+		print 'band: ',index_dic['label'][count], [constit_list[ind] for ind in indices]
 
-	cmap = cm.Spectral_r
-	cmap.set_over('#840000',1.)
-	cmap.set_under('white',1.)
+		fig = plt.figure()
+		plt.rcParams['figure.figsize'] = (15.0, 15.0)
 
-	for ind_term in range(len(var_arr)):
-		print var_lst[ind_term], np.nanmean(var_arr[ind_term].flatten())
-		ax = fig.add_subplot(331+ind_term)
-		clim = [-10**1,10**1]
-		[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, np.sum(var_arr[ind_term][indices,:,:],axis=0), \
-		 				clim, var_lst[ind_term]+index_dic['label'][count], logthresh=3 )
-		plt.xlabel('long'); plt.ylabel('lat')
-		plt.contour( nav_lon_grid_T, nav_lat_grid_T, H, [0,200], colors='k' )
+		cmap = cm.Spectral_r
+		cmap.set_over('#840000',1.)
+		cmap.set_under('white',1.)
 
-	## Save output
-	print fname
-	fname = dstdir +'internaltideharmonics_NEMO_harmtotals_' + index_dic['label'][count] + '_' + config + '.png'
-	plt.savefig(fname)
+		for ind_term in range(len(var_arr)):
+			print var_lst[ind_term], np.nanmean(var_arr[ind_term].flatten())
+			ax = fig.add_subplot(331+ind_term)
+			clim = [-10**1,10**1]
+			[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, np.sum(var_arr[ind_term][indices,:,:],axis=0), \
+			 				clim, var_lst[ind_term]+index_dic['label'][count], logthresh=3 )
+			plt.xlabel('long'); plt.ylabel('lat')
+			plt.contour( nav_lon_grid_T, nav_lat_grid_T, H, [0,200], colors='k' )
+
+		## Save output
+		print fname
+		fname = dstdir +'internaltideharmonics_NEMO_harmtotals_' + index_dic['label'][count] + '_' + config + '.png'
+		plt.savefig(fname)
 
 
 ## Plot totals by harmonic band: Celtic domain
 ##############################################
 
 
+################################################
+################################################
+################################################
+
+
+## Plot div F as u.grad p terms, and differences
+plot_divterms(constit_list,ugradp_bt,ugradp_bc,divF_bt,divF_bc,config='AMM60')
+
+## Plot components and total by harmonic band: Whole domain
+def plot_components_and_total_by_harmonic_band(constit_list,var_arr,var_lst,nav_lon_grid_T,nav_lat_grid_T,H,config='AMM60'):
 
 if(0):
 	# Pickle variables
