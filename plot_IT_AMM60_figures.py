@@ -26,7 +26,7 @@ def budget_term_logplot(panel, clim, var, iconst, constit_list, label, logth):
 
 def celt_budget_term_logplot(panel, maskval, clim, var, iconst, constit_list, label, logth):
 	ax = fig.add_subplot(panel)
-	[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, ma.masked_where(APE[iconst,:,:]<maskval,var[iconst,:,:]), clim, label, logthresh=logth )
+	[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, ma.masked_where(np.sum(APE[:,:,:],axis=0)<maskval,var[iconst,:,:]), clim, label, logthresh=logth )
 	plt.title(constit_list[iconst]+':'+label+' W/m^2')
 	#plt.xlabel('long'); plt.ylabel('lat')
 	plt.contour( nav_lon_grid_T, nav_lat_grid_T, H, levels=[0,200], colors='k')
@@ -130,6 +130,9 @@ if 'loadedFlag' not in locals():
 	D[np.isnan(D)] = 0
 	D[I_land] = np.nan
 	D = np.ma.masked_where(divF_bt==0, D)
+
+	# calc depth av APE
+	APEonH = APE/H
 
 	Fu_bt[I_land] = np.nan
 	Fv_bt[I_land] = np.nan
@@ -269,7 +272,6 @@ def plot_divterms(region='Whole'):
 def plot_barotropic_fluxes_for_harmonic_bands(region='Whole'):
 
 	print '{} loaded constituents: {}'.format(nh, constit_list)
-	# Bands APE
 	# Define bands by constituent indices
 	index_total = [constit_list.index(lab) for lab in constit_list]
 	index_diurnal = [constit_list.index(lab) for lab in constit_list if constit_list[constit_list.index(lab)][1]=='1']
@@ -313,8 +315,8 @@ def plot_APE_by_harmonic_bands():
 	print 'Note that APE is computed for a snapshot N2, index', iday
 	print 'Generate APE maps. Available constituents: {}'.format(constit_list)
 	APE[APE==0] = np.nan
+	APEonH[APEonH==0] = np.nan
 
-	# Bands APE
 	# Define bands by constituent indices
 	index_total = [constit_list.index(lab) for lab in constit_list]
 	index_diurnal = [constit_list.index(lab) for lab in constit_list if constit_list[constit_list.index(lab)][1]=='1']
@@ -326,7 +328,7 @@ def plot_APE_by_harmonic_bands():
 		indices = index_dic['field'][count]
 		print 'band: ',index_dic['label'][count], [constit_list[ind] for ind in indices]
 
-		var = np.sum(APE[indices,:,:],axis=0)/H
+		var = np.sum(APEonH[indices,:,:],axis=0)
 		logrange = list(np.array([0,1,2,3,4]) - np.array([2,2,2,2,2]))
 
 
@@ -467,7 +469,7 @@ if(0):
 	fig = plt.figure()
 	plt.rcParams['figure.figsize'] = (7.0, 15.0)
 
-	maskval = 0 #1 # APE value [J/m^2] to mask fields
+	maskval = 1E-2 #1 # APEonH value [J/m^2] to mask fields
 	## M2
 	iconst = constit_list.index('M2')
 	celt_budget_term_logplot(421,maskval, [-10**1,10**1], divF_bt, iconst,constit_list, 'divF_bt', 3)
@@ -667,14 +669,33 @@ def plot_components_and_total_by_harmonic_band(region='Whole'):
 
 ## Compute a numerical budget for the Whole Shelf
 #############################################
+# var_lst_a = ['eps bot', 'ugradpt',  'D      ','C_bt   ', 'ugradpc' ,  'advKE  ','prodKE ', 'varsuma' ]
+
+def masked_sum(ind,APE0,mask_bathy,dx2):
+	if 'eps' in var_lst[ind] \
+	  or 'D' in var_lst[ind] \
+	  or 'advKE' in var_lst[ind] \
+	  or 'prodKE' in var_lst[ind] \
+	  or 'sum' in var_lst[ind]: # No APE mask
+		print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind],      np.nansum( dx2*1E-6*( ma.masked_where(mask_bathy == 0, np.sum(var_arr[ind][:,:,:],axis=0))).flatten() ))
+		print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind]+'>0', np.nansum( dx2*1E-6*( ma.masked_where(mask_bathy == 0, 0.5*np.sum(+np.abs(var_arr[ind])+var_arr[ind][:,:,:],axis=0))).flatten() ))
+		print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind]+'<0', np.nansum( dx2*1E-6*( ma.masked_where(mask_bathy == 0, 0.5*np.sum(-np.abs(var_arr[ind])+var_arr[ind][:,:,:],axis=0))).flatten() ))
+        elif 'ugrad' in var_lst[ind] \
+	  or 'C_bt' in var_lst[ind]:  # APE mask
+		print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind],      np.nansum( dx2*1E-6*ma.masked_where(np.nansum(APEonH,axis=0)<APE0, ma.masked_where(mask_bathy == 0, np.sum(var_arr[ind][:,:,:],axis=0))).flatten() ))
+		print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind]+'>0', np.nansum( dx2*1E-6*ma.masked_where(np.nansum(APEonH,axis=0)<APE0, ma.masked_where(mask_bathy == 0, 0.5*np.sum(+np.abs(var_arr[ind])+var_arr[ind][:,:,:],axis=0))).flatten() ))
+		print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind]+'<0', np.nansum( dx2*1E-6*ma.masked_where(np.nansum(APEonH,axis=0)<APE0, ma.masked_where(mask_bathy == 0, 0.5*np.sum(-np.abs(var_arr[ind])+var_arr[ind][:,:,:],axis=0))).flatten() ))
+	else:
+		print 'Not expecting that variable: ' + var_lst[ind] + '. Check and try again.'
+	return
 
 def compute_budget(region='Whole'):
 	import numpy.ma as ma # masks
-	APE0 = 1# [J/m2] Threshold for masking terms
+	APE0 = 1E-2 # [J/m3] # 1 [J/m2] Threshold for masking terms
 
 	# Create mask
 	if region=='Celtic':
-		mask_bathy = np.array(nav_lon_grid_T > -13., dtype=int) * np.array(nav_lon_grid_T < -3. , dtype=int) \
+		mask_bathy = np.array(nav_lon_grid_T > -13., dtype=int) * np.array(nav_lon_grid_T < 0. , dtype=int) \
                 * np.array(nav_lat_grid_T > 46 , dtype=int) * np.array(nav_lat_grid_T < 53 , dtype=int) \
                 * np.array(H < 200, dtype=int) * np.array(H > 10, dtype=int)
 
@@ -688,21 +709,21 @@ def compute_budget(region='Whole'):
 	elif config == 'AMM7':
 	    dx2 = (7E3)**2
 
-	print config + ' Metrics integrated over the whole domain, H<200m'
+	print config + ' Metrics integrated over the ' + region.lower() + ' domain, H<200m'
 	print '------------------------------------------------------'
 	print 'Below pyc dissipation  = {:06.2e} MW'.format(dx2*1E-6*np.nansum( ma.masked_where(mask_bathy == 0, minteps_deep).flatten() ))
 	print 'pycnocline dissipation = {:06.2e} MW'.format(dx2*1E-6*np.nansum( ma.masked_where(mask_bathy == 0, meps_pyc).flatten() ))
 	print 'total dissipation = {:06.2e} MW'.format(     dx2*1E-6*np.nansum( ma.masked_where(mask_bathy == 0, minteps).flatten() ))
 	print 'SUM: APE = {:06.2e} MJ'.format(              dx2*1E-6*np.nansum( ma.masked_where(mask_bathy == 0, np.nansum(APE,axis=0)).flatten() ))
-	print 'Following are masked with total APE < '+str(APE0)+ ' J/m2'
+	print 'Following are masked with depth averaged APE < '+str(APE0)+ ' J/m3'
 	for ind in range(len(var_arr)):
-	#    print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind], np.nansum( dx2*1E-6*ma.masked_where(mask_bathy == 0, np.sum(var_arr[ind][:,:,:],axis=0)).flatten() ))
-	    print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind], np.nansum( dx2*1E-6*ma.masked_where(np.nansum(APE,axis=0)<APE0, ma.masked_where(mask_bathy == 0, np.sum(var_arr[ind][:,:,:],axis=0))).flatten() ))
-	    print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind]+'>0', np.nansum( dx2*1E-6*ma.masked_where(np.nansum(APE,axis=0)<APE0, ma.masked_where(mask_bathy == 0, 0.5*np.sum(+np.abs(var_arr[ind])+var_arr[ind][:,:,:],axis=0))).flatten() ))
-	    print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind]+'<0', np.nansum( dx2*1E-6*ma.masked_where(np.nansum(APE,axis=0)<APE0, ma.masked_where(mask_bathy == 0, 0.5*np.sum(-np.abs(var_arr[ind])+var_arr[ind][:,:,:],axis=0))).flatten() ))
-	print 'APE masked total dissipation = {:06.2e} MW'.format(     dx2*1E-6*np.nansum( ma.masked_where(np.nansum(APE,axis=0)<APE0, ma.masked_where(mask_bathy == 0, minteps)).flatten() ))
+		masked_sum(ind,APE0,mask_bathy,dx2)
+	#    print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind], np.nansum( dx2*1E-6*ma.masked_where(np.nansum(APE,axis=0)<APE0, ma.masked_where(mask_bathy == 0, np.sum(var_arr[ind][:,:,:],axis=0))).flatten() ))
+	#    print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind]+'>0', np.nansum( dx2*1E-6*ma.masked_where(np.nansum(APE,axis=0)<APE0, ma.masked_where(mask_bathy == 0, 0.5*np.sum(+np.abs(var_arr[ind])+var_arr[ind][:,:,:],axis=0))).flatten() ))
+	#    print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind]+'<0', np.nansum( dx2*1E-6*ma.masked_where(np.nansum(APE,axis=0)<APE0, ma.masked_where(mask_bathy == 0, 0.5*np.sum(-np.abs(var_arr[ind])+var_arr[ind][:,:,:],axis=0))).flatten() ))
+	#print 'APE masked total dissipation = {:06.2e} MW'.format(     dx2*1E-6*np.nansum( ma.masked_where(np.nansum(APE,axis=0)<APE0, ma.masked_where(mask_bathy == 0, minteps)).flatten() ))
 
-
+	return
 
 
 ################################################
@@ -723,7 +744,7 @@ def compute_budget(region='Whole'):
 #plot_components_and_total_by_harmonic_band(region='Celtic')
 
 compute_budget(region='Whole')
-compute_budget(region='Celtic')
+#compute_budget(region='Celtic')
 
 
 
