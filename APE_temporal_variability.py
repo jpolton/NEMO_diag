@@ -11,15 +11,33 @@ sys.path.insert(0, "/login/jelt/python/ipynb/NEMO/")
 import internaltideharmonics_NEMO as ITh
 import numpy.ma as ma # masks
 
+print len(sys.argv)
+print str(sys.argv)
+if len(sys.argv) > 1:
+	region = str(sys.argv[1])
+else:
+	region = 'Celtic'
+
+if len(sys.argv) > 2:
+	month = str(sys.argv[2])
+else:
+	month = 'Aug'
+
 config = 'AMM60'
 rho0 = 1E3
 constit = 'M2'
 
 # set paths
 [rootdir, dirname, dstdir] = ITh.get_dirpaths(config)
-#filebase =  'AMM60_1d_20120601_20120630'
-#filebase =  'AMM60_1d_20120701_20120731'
-filebase =  'AMM60_1d_20120801_20120831'
+if 'Jun' in month:
+	filebase =  'AMM60_1d_20120601_20120630'
+elif 'Jul' in month:
+	filebase =  'AMM60_1d_20120701_20120731'
+elif 'Aug' in month:
+	filebase =  'AMM60_1d_20120801_20120831'
+else:
+	print 'panic. Not expecting that month'
+
 filebaseTide = 'AMM60_1d_20120801_20120831'
 
 ftide = Dataset(dirname + filebaseTide + '_D2_Tides.nc')
@@ -68,25 +86,69 @@ w2 = ftide.variables[constit+'x_w3D'][:]**2   + ftide.variables[constit+'y_w3D']
 N2 =  fw.variables['N2_25h'][:] # (time_counter, depth, y, x). W-pts. Surface value == 0
 [nt,nz,ny,nx] = np.shape(N2)
 
-APE = 0.5*rho0 * np.nansum( N2 * w2 *(period_list[iconst]*3600/4.)**2 * dzw, axis=N2.shape.index(nz)) / H
+APEonH = 0.5*rho0 * np.nansum( N2 * w2 *(period_list[iconst]*3600/4.)**2 * dzw, axis=N2.shape.index(nz)) / H  # [time_counter, y, x]
 
 
 # mask land
-APE[APE==0] = np.nan
+APEonH[APEonH==0] = np.nan
 
-timestamps = [int(ii) for ii in np.linspace(0,nt-1,9)] # [0, 5, 10,  20]
+
+
+region = 'Celtic'
+APE0 = 1E-2
+areaAPE = np.zeros(nt)
+area = np.zeros(nt)
+
+# Create mask
+if region=='Celtic':
+	mask_bathy = np.array(nav_lon_grid_T > -13., dtype=int) * np.array(nav_lon_grid_T < 0. , dtype=int) \
+		* np.array(nav_lat_grid_T > 46 , dtype=int) * np.array(nav_lat_grid_T < 53 , dtype=int) \
+		* np.array(H < 200, dtype=int) * np.array(H > 10, dtype=int)
+
+elif region=='subCeltic':
+	mask_bathy = np.array(nav_lon_grid_T > -10., dtype=int) * np.array(nav_lon_grid_T < -9 , dtype=int)\
+		* np.array(nav_lat_grid_T > 49 , dtype=int) * np.array(nav_lat_grid_T < 50 , dtype=int) \
+		* np.array(H < 200, dtype=int) * np.array(H > 10, dtype=int)
+
+APE_mask = np.array(APEonH > APE0, dtype=int)
+
+if config == 'AMM60':
+	dx2 = (1.8E3)**2
+elif config == 'AMM7':
+	dx2 = (7E3)**2
+
+for i in range(nt):
+	areaAPE[i] = dx2*1E-6*np.nansum( ma.masked_where(mask_bathy*APE_mask[i,:,:] == 0, APEonH[i,:,:]*H ).flatten() )
+	area[i] =np.nansum( (mask_bathy*APE_mask[i,:,:]).flatten() )
+	print 'SUM: APE = {:06.2e} MJ'.format( areaAPE[i] )
+	#plt.plot(i,areaAPE[i],'+')
 fig = plt.figure()
 plt.rcParams['figure.figsize'] = (15.0, 15.0)
-for i in timestamps:
-	plt.subplot(3,3,1+timestamps.index(i))
-	plt.pcolormesh( nav_lon_grid_T, nav_lat_grid_T, np.log10(APE[i,:,:])-np.log10(APE[0,:,:])*0 )
-	plt.clim([-2,2])
-	plt.colorbar()
-	plt.xlim(-13, -0)
-	plt.ylim(46, 53)
-	plt.title(str(i))
-plt.savefig('AugAPE.png')
+plt.subplot(2,1,1)
+plt.plot( np.arange(nt), areaAPE), plt.ylabel('areaAPE')
+plt.subplot(2,1,2)
+plt.plot( np.arange(nt), area), plt.ylabel('area')
+plt.savefig(month+'APE.png')
+plt.title(month+ ' APE')
 #plt.show()
 plt.close(fig)
-print 'This suggests that the APE does not change very much over the month (when viewed on a log scale). Relative changes happen with APE is small'
+
+if(0):
+
+	timestamps = [int(ii) for ii in np.linspace(0,nt-1,9)] # [0, 5, 10,  20]
+	fig = plt.figure()
+	plt.rcParams['figure.figsize'] = (15.0, 15.0)
+	for i in timestamps:
+		plt.subplot(3,3,1+timestamps.index(i))
+		plt.pcolormesh( nav_lon_grid_T, nav_lat_grid_T, np.log10(APEonH[i,:,:])-np.log10(APEonH[0,:,:])*0 )
+		plt.clim([-2,2])
+		plt.colorbar()
+		plt.xlim(-13, -0)
+		plt.ylim(46, 53)
+		plt.title(str(i))
+	plt.savefig('AugAPE.png')
+	#plt.show()
+	plt.close(fig)
+	print 'This suggests that the APE (on H) does not change very much over the month (when viewed on a log scale). Relative changes happen with APE is small'
+
 
