@@ -16,15 +16,31 @@ import numpy.ma as ma # masks
 
 ##################################################################################
 ## Plot the div F as u.gradp terms
-def budget_term_logplot(panel, clim, var, iconst, constit_list, label, logth):
+def budget_term_logplot(fig, panel, clim, var2d, label, logth, region='Whole'):
 	#mask_bathy = define_masks(APE0=0,region='Whole')
 
+	ax = fig.add_subplot(panel)
+	[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, var2d, \
+			clim, label, logthresh=logth )
+	plt.title(label)
+	plt.contourf( nav_lon_grid_T, nav_lat_grid_T,  H, levels=[0,1], colors='y')
+	plt.contour( nav_lon_grid_T, nav_lat_grid_T,  H, levels=[0,200], colors='k')
+	if region == 'Celtic':
+		plt.xlim(-13,0), plt.ylim(46,53)
+	elif region == 'Whole':
+		plt.xlim(-13,13), plt.ylim(43,63)
+	#plt.xlabel('long'); plt.ylabel('lat')
+	return fig
+
+def budget_term_logplot_old(panel, clim, var, iconst, constit_list, label, logth):
+	#mask_bathy = define_masks(APE0=0,region='Whole')
+	print 'Using budget_term_logplot_old. Update'
 	ax = fig.add_subplot(panel)
 #	[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, np.ma.masked_where(mask_bathy==0, var[iconst,:,:]), \
 	[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, var[iconst,:,:], \
 			clim, label, logthresh=logth )
 	plt.title(constit_list[iconst]+':'+label+' W/m^2')
-	plt.contourf( nav_lon_grid_T, nav_lat_grid_T,  H, levels=[0,10], colors='y')
+	plt.contourf( nav_lon_grid_T, nav_lat_grid_T,  H, levels=[0,1], colors='y')
 	plt.contour( nav_lon_grid_T, nav_lat_grid_T,  H, levels=[0,200], colors='k')
 	plt.xlim(-13,13), plt.ylim(43,63)
 	#plt.xlabel('long'); plt.ylabel('lat')
@@ -43,17 +59,52 @@ def celt_budget_term_logplot(panel, maskval, clim, var, iconst, constit_list, la
 ##################################################################################
 ## Plot div F as u.grad p terms, and differences
 ################################################
+def plot_terms_singlepanel(region='Whole'):
+	# Define bands by constituent indices
+	index_total = [constit_list.index(lab) for lab in constit_list]
+	index_M2 = [constit_list.index(lab) for lab in constit_list if constit_list[constit_list.index(lab)]=='M2']
+	index_dic = {'label':['total', 'M2'], 'field':[index_total, index_M2]}
 
-def plot_divterms(region='Whole'):
+	for count in range(len(index_dic['label'])):
+		indices = index_dic['field'][count]
+		print 'band: ',index_dic['label'][count], [constit_list[ind] for ind in indices]
+
+		clim = [-10**1,10**1]
+		cmap = cm.Spectral_r
+		cmap.set_over('#840000',1.)
+		cmap.set_under('white',1.)
+
+		for ind_term in range(len(var_arr)):
+			fig = plt.figure()
+			plt.rcParams['figure.figsize'] = (15.0, 15.0)
+			print var_lst[ind_term], np.nanmean(var_arr[ind_term].flatten())
+			
+			var2d = np.sum(var_arr[ind_term][indices,:,:],axis=0)
+			label = index_dic['label'][count]+': '+var_lst[ind_term] + ' [W/m2]'
+			fig = budget_term_logplot(fig,111, clim, var2d, label, 3, region)
+
+			## Save output
+		        fname = dstdir +'internaltideharmonics_NEMO_'+ var_lst[ind_term].strip().replace(' ','_') \
+					+ '_' + index_dic['label'][count] + \
+				          '_' + region + '_' + config + '.png'
+			plt.savefig(fname)
+			print fname
+			plt.close(fig)
+
+
+
+def plot_divterms_old(region='Whole'):
 	## M2
 	constit = 'M2'
 	iconst = constit_list.index(constit)
 
+	clim = [-10**1,10**1]
 
 
 	fig = plt.figure()
 	plt.rcParams['figure.figsize'] = (15.0, 15.0)
-	budget_term_logplot(111, [-10**1,10**1], ugradp_bt, iconst,constit_list, 'u.gradp_bt', 3)
+	label = constit + ': u.gradp_bt [W/m^2]'
+	fig = budget_term_logplot(fig, 111, clim, ugradp_bt[iconst,:,:], label, 3, region)
 	## Save output
 	fname = dstdir +'internaltideharmonics_NEMO_ugradpbt_' + constit + '_' + config + '.png'
 	plt.savefig(fname)
@@ -166,6 +217,9 @@ def plot_barotropic_fluxes_for_harmonic_bands(region='Whole'):
 		fig = plt.figure()
 		plt.rcParams['figure.figsize'] = (15.0, 15.0)
 		ITh.plot_F(fig,Fu,Fv,nav_lon_grid_T,nav_lat_grid_T, mode='bt', type='contourf', clim=index_dic['Fbtclim'][count], side='lhs',zoom=False)
+		
+		plt.contourf( nav_lon_grid_T, nav_lat_grid_T,  H, levels=[0,1], colors='y')
+                plt.contour( nav_lon_grid_T, nav_lat_grid_T,  H, levels=[0,200], colors='k')
 		plt.title(index_dic['label'][count]+': Barotropic flux')
 		## Save output
 		fname = dstdir + 'internaltideharmonics_NEMO_Fbt_' + \
@@ -183,7 +237,7 @@ def plot_barotropic_fluxes_for_harmonic_bands(region='Whole'):
 
 
 ## Plot APE budgets for all species and total
-def plot_APE_by_harmonic_bands():
+def plot_APE_by_harmonic_bands(region='Whole'):
 	print 'Note that APE is computed for a snapshot N2, index', iday
 	print 'Generate APE maps. Available constituents: {}'.format(constit_list)
 	APE[APE==0] = np.nan
@@ -213,11 +267,16 @@ def plot_APE_by_harmonic_bands():
 		plt.contourf( nav_lon_grid_T, nav_lat_grid_T, np.log10(var), logrange, cmap=cmap, extend="both" )
 		plt.clim([min(logrange),max(logrange)])
 		plt.colorbar()
-		plt.title(config+' '+index_dic['label'][count]+': log10(APE [J/m^3])')
-		plt.contour( nav_lon_grid_T, nav_lat_grid_T, H, [0,200], colors='k' )
-
+		plt.title(index_dic['label'][count]+': log10(APE [J/m^3])')
+		plt.contourf( nav_lon_grid_T, nav_lat_grid_T,  H, levels=[0,1], colors='y')
+	        plt.contour( nav_lon_grid_T, nav_lat_grid_T, H, levels=[0,200], colors='k' )
+		if region == 'Celtic':
+			plt.xlim(-13,0), plt.ylim(46,53)
+		elif region == 'Whole':
+			plt.xlim(-13,13), plt.ylim(43,63)
 		## Save output
-		fname = dstdir +'internaltideharmonics_NEMO_APE_' + index_dic['label'][count] + '_' + config + '.png'
+		fname = dstdir +'internaltideharmonics_NEMO_APE_' + index_dic['label'][count] + \
+				'_' + region + '_' + config + '.png'
 		plt.savefig(fname)
 		print fname
 		plt.close(fig)
@@ -251,15 +310,17 @@ def plot_components_and_total_by_harmonic_band(region='Whole'):
 
 		for ind_term in range(len(var_arr)):
 			print var_lst[ind_term], np.nanmean(var_arr[ind_term].flatten())
-			ax = fig.add_subplot(331+ind_term)
+			#ax = fig.add_subplot(331+ind_term)
 			clim = [-10**1,10**1]
-			[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, np.sum(var_arr[ind_term][indices,:,:],axis=0), \
-							clim, var_lst[ind_term]+' '+index_dic['label'][count], logthresh=3 )
-			plt.xlabel('long'); plt.ylabel('lat')
-			plt.contour( nav_lon_grid_T, nav_lat_grid_T, H, [0,200], colors='k' )
-			if region=='Celtic':
-				    plt.xlim(-13, -0)
-				    plt.ylim(46, 53)
+			#[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, np.sum(var_arr[ind_term][indices,:,:],axis=0), \
+			#				clim, var_lst[ind_term]+' '+index_dic['label'][count], logthresh=3 )
+			#plt.xlabel('long'); plt.ylabel('lat')
+			#plt.contour( nav_lon_grid_T, nav_lat_grid_T, H, [0,200], colors='k' )
+			
+			var2d = np.sum(var_arr[ind_term][indices,:,:],axis=0)
+			label = index_dic['label'][count] + ': ' + var_lst[ind_term]+' [W/m2]'
+			fig = budget_term_logplot(fig,331+ind_term, clim, var2d, label, 3, region)
+
 
 		## Save output
 		fname = dstdir +'internaltideharmonics_NEMO_harmtotals_' + index_dic['label'][count] \
@@ -282,7 +343,7 @@ def masked_sum(ind,APE0,mask_bathy,dx2):
 	  or 'advKE' in var_lst[ind] \
 	  or 'prodKE' in var_lst[ind] \
 	  or 'sum' in var_lst[ind]: # No APE mask
-	    tot = np.nansum( dx2*1E-6*( ma.masked_where(mask_bathy == 0, np.sum(var_arr[ind][:,:,:],axis=0))).flatten() )
+	    	tot = np.nansum( dx2*1E-6*( ma.masked_where(mask_bathy == 0, np.sum(var_arr[ind][:,:,:],axis=0))).flatten() )
 		pos = np.nansum( dx2*1E-6*( ma.masked_where(mask_bathy == 0, 0.5*np.sum(+np.abs(var_arr[ind])+var_arr[ind][:,:,:],axis=0))).flatten() )
 		neg = np.nansum( dx2*1E-6*( ma.masked_where(mask_bathy == 0, 0.5*np.sum(-np.abs(var_arr[ind])+var_arr[ind][:,:,:],axis=0))).flatten() )
 		print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind],  tot )
@@ -507,14 +568,18 @@ if __name__ == '__main__':
 
 		## Apply improved bathymetric mask to all KEY variables (i.e. var_lst)
 		# This mask should be applied before saving the variables.
-		mask_bathy = define_masks(APE0,region='Whole')
-		ugradp_bt = np.ma.masked_where( mask_bathy == 0, ugradp_bt )
-		ugradp_bc = np.ma.masked_where( mask_bathy == 0, ugradp_bc )
-		advKE = np.ma.masked_where( mask_bathy == 0, advKE )
-		prodKE = np.ma.masked_where( mask_bathy == 0, prodKE )
-		APEonH = np.ma.masked_where( mask_bathy == 0, APEonH )
-		D = np.ma.masked_where( mask_bathy == 0, D )
-		C_bt = np.ma.masked_where( mask_bathy == 0, C_bt )
+		mask_bathy = define_masks(APE0=0,region='Whole')
+		#Fu_bt = np.ma.masked_where( np.tile(mask_bathy,(nh,1,1)) == 0, Fu_bt )
+		#Fv_bt = np.ma.masked_where( np.tile(mask_bathy,(nh,1,1)) == 0, Fv_bt )
+		#Fu_bc = np.ma.masked_where( np.tile(mask_bathy,(nh,1,1)) == 0, Fu_bc )
+		#Fv_bc = np.ma.masked_where( np.tile(mask_bathy,(nh,1,1)) == 0, Fv_bc )
+		ugradp_bt = np.ma.masked_where( np.tile(mask_bathy,(nh,1,1)) == 0, ugradp_bt )
+		ugradp_bc = np.ma.masked_where( np.tile(mask_bathy,(nh,1,1)) == 0, ugradp_bc )
+		advKE = np.ma.masked_where( np.tile(mask_bathy,(nh,1,1)) == 0, advKE )
+		prodKE = np.ma.masked_where( np.tile(mask_bathy,(nh,1,1)) == 0, prodKE )
+		APEonH = np.ma.masked_where( np.tile(mask_bathy,(nh,1,1)) == 0, APEonH )
+		D = np.ma.masked_where( np.tile(mask_bathy,(nh,1,1)) == 0, D )
+		C_bt = np.ma.masked_where( np.tile(mask_bathy,(nh,1,1)) == 0, C_bt )
 		minteps_deep = np.ma.masked_where( mask_bathy == 0, minteps_deep )
 
 
@@ -559,12 +624,12 @@ if __name__ == '__main__':
 	#plot_barotropic_fluxes_for_harmonic_bands(region='Whole')
 
 	## Plot APE budgets for all species and total
-	#plot_APE_by_harmonic_bands()
+	#plot_APE_by_harmonic_bands(region='Whole')
 
-	## Plot div F as u.grad p terms, and differences
-	plot_divterms(region='Whole')
+	## Plot budget terms in list as single panel terms.
+	#plot_terms_singlepanel(region='Whole')
 
-	## Plot components and total by harmonic band: Whole domain
+	## Plot components and total by harmonic band:
 	#plot_components_and_total_by_harmonic_band(region='Whole')
 	#plot_components_and_total_by_harmonic_band(region='Celtic')
 
@@ -576,4 +641,4 @@ if __name__ == '__main__':
 	if(0):
 		[minteps_deep,  ugradp_bt,  D,   C_bt,  ugradp_bc,   \
 					advKE   ,   prodKE,    varsum_a, \
-					nav_lon_grid_T, nav_lat_grid_T = pickle_me()
+					nav_lon_grid_T, nav_lat_grid_T ] = pickle_me()
