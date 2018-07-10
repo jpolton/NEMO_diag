@@ -62,6 +62,8 @@ e3t = np.squeeze(fm.variables['e3t_0'][:]) # (depth, y, x)
 e3w = np.squeeze(fm.variables['e3w_0'][:]) # (depth, y, x)
 gdept = np.squeeze(fm.variables['gdept_0'][:]) # (depth, y, x)
 gdepw = np.squeeze(fm.variables['gdepw_0'][:]) # (depth, y, x)
+tmask = fm.variables['tmask'][:] # (1, depth, y ,x)
+
 H = np.zeros((ny,nx))
 for J in range(ny):
 	for I in range(nx):
@@ -83,7 +85,8 @@ dzw[0,:,:] = gdept[0,:,:]
 print 'Computing APE' 
 
 # load in vertical velocity
-w2 = ftide.variables[constit+'x_w3D'][:]**2   + ftide.variables[constit+'y_w3D'][:]**2   # (depth, y, x)  e.g. M2x_u
+wvel = ftide.variables[constit+'x_w3D'][:]   + 1.j*ftide.variables[constit+'y_w3D'][:]   # (depth, y, x)  e.g. M2x_w
+w2 = np.square( np.abs(wvel) ) 
 
 
 # load in background stratification
@@ -99,8 +102,12 @@ APEonH[APEonH==0] = np.nan
 #####
 # Compute C_bt -- IN PROGRESS
 [elev, u_bt, v_bt, u_bc, v_bc, wvel] = ITh.loadharmonic(ftide, constit_list[iconst],mbathy)    
-rho = ITh.rhoharm(ftide,fw,iday,constit_list[iconst],period_list[iconst],mbathy)
-C_bt = get_C(u_bt, v_bt, rho, e1u, e2v, e3w, gdepw, H, mbathy)
+g = 9.81
+print 'compute '+ constit + ' rho_constit [nt,nz,ny,nx]'
+rho_constit = -1j * (period_list[iconst]*3600. *0.5/np.pi) * (rho0/g) * N2[:,:,:,:] * wvel # (nt,nz,ny,nx)
+rho_constit = np.ma.masked_where( np.tile(tmask,(nt,1,1,1)) == 0, rho_constit)
+
+C_bt = ITh.get_C(u_bt, v_bt, rho_constit, e1u, e2v, e3w, gdepw, H, mbathy)
 
 
 
@@ -108,33 +115,11 @@ region = 'Celtic'
 APE0 = 1E-2
 areaAPE = np.zeros(nt)
 area = np.zeros(nt)
+sumC = np.zeros(nt)
+time = np.zeros(nt)
 
 # Create mask
-if region=='Celtic':
-	mask_bathy = np.array(nav_lon_grid_T > -13., dtype=int) * np.array(nav_lon_grid_T < 0. , dtype=int) \
-		* np.array(nav_lat_grid_T > 46 , dtype=int) * np.array(nav_lat_grid_T < 53 , dtype=int) \
-		* np.array(H < 200, dtype=int) * np.array(H > 10, dtype=int)
-
-elif region=='subCeltic':
-	mask_bathy = np.array(nav_lon_grid_T > -10., dtype=int) * np.array(nav_lon_grid_T < -9 , dtype=int)\
-		* np.array(nav_lat_grid_T > 49 , dtype=int) * np.array(nav_lat_grid_T < 50 , dtype=int) \
-		* np.array(H < 200, dtype=int) * np.array(H > 10, dtype=int)
-
-elif region=='Whole':
-	# Extra bits for Faeros; S. Bay of Biscay; two bits for the East of the Norwegian Trench
-	mask_bathy = np.array(nav_lon_grid_T > -13., dtype=int)  \
-			* np.array(nav_lat_grid_T > 43.5 , dtype=int) * np.array(nav_lat_grid_T < 62 , dtype=int) \
-			* np.array(H < 200, dtype=int) * np.array(H > 10, dtype=int) \
-			* np.array(nav_lat_grid_T - 0.5*nav_lon_grid_T < 60 - 0.5*(-6), dtype=int) \
-			* np.array(nav_lat_grid_T + 0.1*nav_lon_grid_T > 43.6 + 0.1*(-1.8), dtype=int) \
-			* (~np.array((nav_lat_grid_T - 0.5*nav_lon_grid_T < 43.68 - 0.5*(-1.6)) \
-			  & (nav_lat_grid_T < 43.68), dtype=bool)).astype(int)\
-			* (~np.array((nav_lat_grid_T > 58.4) & (nav_lon_grid_T > 4) & (nav_lon_grid_T < 9.8), dtype=bool)).astype(int) \
-			* (~np.array((nav_lat_grid_T < 58.4) & (nav_lat_grid_T > 57.8) \
-			  & (nav_lon_grid_T > 4 ) & (nav_lon_grid_T <= 7 )    \
-		          & (nav_lat_grid_T + 0.2*nav_lon_grid_T > 58.4 + 0.2*4 ), dtype=bool)).astype(int) \
-			* (~np.array((nav_lat_grid_T - 0.25*nav_lon_grid_T > 57.9 - 0.25*8 ) \
-			  & (nav_lon_grid_T > 7) & (nav_lon_grid_T < 9.8) , dtype=bool)).astype(int)
+mask_bathy = ITh.define_mask(nav_lon_grid_T, nav_lat_grid_T, H, region)
 
 APE_mask = np.array(APEonH > APE0, dtype=int)
 
@@ -147,8 +132,28 @@ for i in range(nt):
 	areaAPE[i] = dx2*1E-6*np.nansum( ma.masked_where(mask_bathy*APE_mask[i,:,:] == 0, APEonH[i,:,:]*H ).flatten() )
 	area[i] =np.nansum( (mask_bathy*APE_mask[i,:,:]).flatten() )
 	sumC[i] =np.nansum( (mask_bathy*C_bt[i,:,:]).flatten() )
+	time[i] = i
 	print 'SUM: APE = {:06.2e} MJ'.format( areaAPE[i] )
 	#plt.plot(i,areaAPE[i],'+')
+
+# Save variables
+import datetime
+import pandas as pd
+import numpy as np
+from AMM60_tools import NEMO_fancy_datestr # NEMO date strings
+
+# load in time
+time_counter = fw.variables['time_counter'][:] # vector
+time_origin = fw.variables['time_counter'].time_origin
+time_calendar = fw.variables['time_counter'].calendar
+time_units = fw.variables['time_counter'].units
+
+[time_str, time_datetime, flag_err] = NEMO_fancy_datestr( time_counter, time_origin ) # internal tide data
+
+columns = ['areaAPE','area', 'C']
+data = np.array([areaAPE, area, sumC] ).T
+df = pd.DataFrame(data, index=time_datetime, columns=columns)
+
 fig = plt.figure()
 plt.rcParams['figure.figsize'] = (15.0, 15.0)
 plt.subplot(3,1,1)
