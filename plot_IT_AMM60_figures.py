@@ -17,7 +17,6 @@ import numpy.ma as ma # masks
 ##################################################################################
 ## Plot the div F as u.gradp terms
 def budget_term_logplot(fig, panel, clim, var2d, label, logth, region='Whole'):
-	#mask_bathy = define_masks(APE0=0,region='Whole')
 
 	ax = fig.add_subplot(panel)
 	[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, var2d, \
@@ -33,7 +32,6 @@ def budget_term_logplot(fig, panel, clim, var2d, label, logth, region='Whole'):
 	return fig
 
 def budget_term_logplot_old(panel, clim, var, iconst, constit_list, label, logth):
-	#mask_bathy = define_masks(APE0=0,region='Whole')
 	print 'Using budget_term_logplot_old. Update'
 	ax = fig.add_subplot(panel)
 #	[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, np.ma.masked_where(mask_bathy==0, var[iconst,:,:]), \
@@ -361,44 +359,11 @@ def masked_sum(ind,APE0,mask_bathy,dx2):
 		print 'Not expecting that variable: ' + var_lst[ind] + '. Check and try again.'
 	return [tot, pos, neg]
 
-def define_masks(APE0=0,region='Whole'):
-	import numpy.ma as ma # masks
-
-
-	# Create mask
-	if region=='Celtic':
-		mask_bathy = np.array(nav_lon_grid_T > -13., dtype=int) * np.array(nav_lon_grid_T < 0. , dtype=int) \
-		* np.array(nav_lat_grid_T > 46 , dtype=int) * np.array(nav_lat_grid_T < 53 , dtype=int) \
-		* np.array(H < 200, dtype=int) * np.array(H > 10, dtype=int)
-
-	elif region=='subCeltic':
-		mask_bathy = np.array(nav_lon_grid_T > -10., dtype=int) * np.array(nav_lon_grid_T < -9 , dtype=int)\
-			* np.array(nav_lat_grid_T > 49 , dtype=int) * np.array(nav_lat_grid_T < 50 , dtype=int) \
-			* np.array(H < 200, dtype=int) * np.array(H > 10, dtype=int)
-
-	elif region=='Whole':
-	# Extra bits for Faeros; S. Bay of Biscay; two bits for the East of the Norwegian Trench
-		mask_bathy = np.array(nav_lon_grid_T > -13., dtype=int)  \
-			* np.array(nav_lat_grid_T > 43.5 , dtype=int) * np.array(nav_lat_grid_T < 62 , dtype=int) \
-			* np.array(H < 200, dtype=int) * np.array(H > 10, dtype=int) \
-			* np.array(nav_lat_grid_T - 0.5*nav_lon_grid_T < 60 - 0.5*(-6), dtype=int) \
-			* np.array(nav_lat_grid_T + 0.1*nav_lon_grid_T > 43.6 + 0.1*(-1.8), dtype=int) \
-			* (~np.array((nav_lat_grid_T - 0.5*nav_lon_grid_T < 43.68 - 0.5*(-1.6)) \
-			  & (nav_lat_grid_T < 43.68), dtype=bool)).astype(int)\
-			* (~np.array((nav_lat_grid_T > 58.4) & (nav_lon_grid_T > 4) & (nav_lon_grid_T < 9.8), dtype=bool)).astype(int) \
-			* (~np.array((nav_lat_grid_T < 58.4) & (nav_lat_grid_T > 57.8) \
-			  & (nav_lon_grid_T > 4 ) & (nav_lon_grid_T <= 7 )    \
-			  & (nav_lat_grid_T + 0.2*nav_lon_grid_T > 58.4 + 0.2*4 ), dtype=bool)).astype(int) \
-			* (~np.array((nav_lat_grid_T - 0.25*nav_lon_grid_T > 57.9 - 0.25*8 ) \
-			  & (nav_lon_grid_T > 7) & (nav_lon_grid_T < 9.8) , dtype=bool)).astype(int)
-
-	#mask_APE = np.array( np.nansum(APEonH,axis=APEonH.shape.index(nh)) < APE0, dtype=int )
-	return mask_bathy #, mask_APE
 
 def compute_budget(region='Whole'):
 	APE0 = 1E-2 # [J/m3] # 1 [J/m2] Threshold for masking terms
 
-	mask_bathy = define_masks(APE0,region)
+	mask_bathy = ITh.define_mask(nav_lon_grid_T, nav_lat_grid_T, H, region)
 
 	if config == 'AMM60':
 	    dx2 = (1.8E3)**2
@@ -568,7 +533,7 @@ if __name__ == '__main__':
 
 		## Apply improved bathymetric mask to all KEY variables (i.e. var_lst)
 		# This mask should be applied before saving the variables.
-		mask_bathy = define_masks(APE0=0,region='Whole')
+		mask_bathy = ITh.define_mask(nav_lon_grid_T, nav_lat_grid_T, H, region='Whole')
 		#Fu_bt = np.ma.masked_where( np.tile(mask_bathy,(nh,1,1)) == 0, Fu_bt )
 		#Fv_bt = np.ma.masked_where( np.tile(mask_bathy,(nh,1,1)) == 0, Fv_bt )
 		#Fu_bc = np.ma.masked_where( np.tile(mask_bathy,(nh,1,1)) == 0, Fu_bc )
