@@ -17,13 +17,15 @@ import numpy.ma as ma # masks
 ##################################################################################
 ## Plot the div F as u.gradp terms
 def budget_term_logplot(panel, clim, var, iconst, constit_list, label, logth):
-	mask_bathy = define_masks(APE0=0,region='Whole')
-	
+	#mask_bathy = define_masks(APE0=0,region='Whole')
+
 	ax = fig.add_subplot(panel)
-	[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, np.ma.masked_where(mask_bathy==0, var[iconst,:,:]), \
+#	[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, np.ma.masked_where(mask_bathy==0, var[iconst,:,:]), \
+	[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, var[iconst,:,:], \
 			clim, label, logthresh=logth )
 	plt.title(constit_list[iconst]+':'+label+' W/m^2')
-	plt.contour( nav_lon_grid_T, nav_lat_grid_T, np.ma.masked_where(mask_bathy==0, H), levels=[0,200], colors='k')
+	plt.contourf( nav_lon_grid_T, nav_lat_grid_T,  H, levels=[0,10], colors='y')
+	plt.contour( nav_lon_grid_T, nav_lat_grid_T,  H, levels=[0,200], colors='k')
 	plt.xlim(-13,13), plt.ylim(43,63)
 	#plt.xlabel('long'); plt.ylabel('lat')
 	return
@@ -46,8 +48,8 @@ def plot_divterms(region='Whole'):
 	## M2
 	constit = 'M2'
 	iconst = constit_list.index(constit)
-        
-	
+
+
 
 	fig = plt.figure()
 	plt.rcParams['figure.figsize'] = (15.0, 15.0)
@@ -65,7 +67,7 @@ def plot_divterms(region='Whole'):
 	fname = dstdir +'internaltideharmonics_NEMO_ugradpbc_' + constit + '_' + config + '.png'
 	plt.savefig(fname)
 	plt.close(fig)
-	
+
 
 	fig = plt.figure()
 	plt.rcParams['figure.figsize'] = (15.0, 15.0)
@@ -74,7 +76,7 @@ def plot_divterms(region='Whole'):
 	fname = dstdir +'internaltideharmonics_NEMO_prodKE_' + constit + '_' + config + '.png'
 	plt.savefig(fname)
 	plt.close(fig)
-	
+
 	fig = plt.figure()
 	plt.rcParams['figure.figsize'] = (15.0, 15.0)
 	budget_term_logplot(111, [-10**1,10**1], advKE, iconst,constit_list, 'advKE', 3)
@@ -328,7 +330,7 @@ def define_masks(APE0=0,region='Whole'):
 
 def compute_budget(region='Whole'):
 	APE0 = 1E-2 # [J/m3] # 1 [J/m2] Threshold for masking terms
-	
+
 	mask_bathy = define_masks(APE0,region)
 
 	if config == 'AMM60':
@@ -478,6 +480,19 @@ if __name__ == '__main__':
 
 		ugradp_bc = np.ma.masked_where(np.isnan(ugradp_bc), ugradp_bc)
 		ugradp_bt = np.ma.masked_where(np.isnan(ugradp_bt), ugradp_bt)
+
+		## Apply improved bathymetric mask to all KEY variables (i.e. var_lst)
+		# This mask should be applied before saving the variables.
+		mask_bathy = define_masks(APE0,region='Whole')
+		ugradp_bt = np.ma.masked_where( mask_bathy == 0, ugradp_bt )
+		ugradp_bc = np.ma.masked_where( mask_bathy == 0, ugradp_bc )
+		advKE = np.ma.masked_where( mask_bathy == 0, advKE )
+		prodKE = np.ma.masked_where( mask_bathy == 0, prodKE )
+		APEonH = np.ma.masked_where( mask_bathy == 0, APEonH )
+		D = np.ma.masked_where( mask_bathy == 0, D )
+		C_bt = np.ma.masked_where( mask_bathy == 0, C_bt )
+		minteps_deep = np.ma.masked_where( mask_bathy == 0, minteps_deep )
+
 
 
 		#Fu_bt[np.isnan(Fu_bt)] = 0
