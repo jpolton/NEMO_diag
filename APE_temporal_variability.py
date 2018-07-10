@@ -54,6 +54,10 @@ nav_lon_grid_T = fm.variables['nav_lon'][:] # (y,x)
 
 ## Load mbathy
 mbathy = np.squeeze(fm.variables['mbathy'][:]) # (time_counter, y, x)  --> (y, x)
+e1u = np.squeeze(fm.variables['e1u'][0,:,:]) # (time_counter, y, x)  --> (y, x)
+e2v = np.squeeze(fm.variables['e2v'][0,:,:]) # (time_counter, y, x)  --> (y, x)
+#e1u = np.squeeze(fm.variables['e1u'][:]) # (ny, nx)
+#e2v = np.squeeze(fm.variables['e2v'][:]) # (ny, nx)
 e3t = np.squeeze(fm.variables['e3t_0'][:]) # (depth, y, x)
 e3w = np.squeeze(fm.variables['e3w_0'][:]) # (depth, y, x)
 gdept = np.squeeze(fm.variables['gdept_0'][:]) # (depth, y, x)
@@ -92,6 +96,12 @@ APEonH = 0.5*rho0 * np.nansum( N2 * w2 *(period_list[iconst]*3600/4.)**2 * dzw, 
 # mask land
 APEonH[APEonH==0] = np.nan
 
+#####
+# Compute C_bt -- IN PROGRESS
+[elev, u_bt, v_bt, u_bc, v_bc, wvel] = ITh.loadharmonic(ftide, constit_list[iconst],mbathy)    
+rho = ITh.rhoharm(ftide,fw,iday,constit_list[iconst],period_list[iconst],mbathy)
+C_bt = get_C(u_bt, v_bt, rho, e1u, e2v, e3w, gdepw, H, mbathy)
+
 
 
 region = 'Celtic'
@@ -110,6 +120,22 @@ elif region=='subCeltic':
 		* np.array(nav_lat_grid_T > 49 , dtype=int) * np.array(nav_lat_grid_T < 50 , dtype=int) \
 		* np.array(H < 200, dtype=int) * np.array(H > 10, dtype=int)
 
+elif region=='Whole':
+	# Extra bits for Faeros; S. Bay of Biscay; two bits for the East of the Norwegian Trench
+	mask_bathy = np.array(nav_lon_grid_T > -13., dtype=int)  \
+			* np.array(nav_lat_grid_T > 43.5 , dtype=int) * np.array(nav_lat_grid_T < 62 , dtype=int) \
+			* np.array(H < 200, dtype=int) * np.array(H > 10, dtype=int) \
+			* np.array(nav_lat_grid_T - 0.5*nav_lon_grid_T < 60 - 0.5*(-6), dtype=int) \
+			* np.array(nav_lat_grid_T + 0.1*nav_lon_grid_T > 43.6 + 0.1*(-1.8), dtype=int) \
+			* (~np.array((nav_lat_grid_T - 0.5*nav_lon_grid_T < 43.68 - 0.5*(-1.6)) \
+			  & (nav_lat_grid_T < 43.68), dtype=bool)).astype(int)\
+			* (~np.array((nav_lat_grid_T > 58.4) & (nav_lon_grid_T > 4) & (nav_lon_grid_T < 9.8), dtype=bool)).astype(int) \
+			* (~np.array((nav_lat_grid_T < 58.4) & (nav_lat_grid_T > 57.8) \
+			  & (nav_lon_grid_T > 4 ) & (nav_lon_grid_T <= 7 )    \
+		          & (nav_lat_grid_T + 0.2*nav_lon_grid_T > 58.4 + 0.2*4 ), dtype=bool)).astype(int) \
+			* (~np.array((nav_lat_grid_T - 0.25*nav_lon_grid_T > 57.9 - 0.25*8 ) \
+			  & (nav_lon_grid_T > 7) & (nav_lon_grid_T < 9.8) , dtype=bool)).astype(int)
+
 APE_mask = np.array(APEonH > APE0, dtype=int)
 
 if config == 'AMM60':
@@ -120,14 +146,17 @@ elif config == 'AMM7':
 for i in range(nt):
 	areaAPE[i] = dx2*1E-6*np.nansum( ma.masked_where(mask_bathy*APE_mask[i,:,:] == 0, APEonH[i,:,:]*H ).flatten() )
 	area[i] =np.nansum( (mask_bathy*APE_mask[i,:,:]).flatten() )
+	sumC[i] =np.nansum( (mask_bathy*C_bt[i,:,:]).flatten() )
 	print 'SUM: APE = {:06.2e} MJ'.format( areaAPE[i] )
 	#plt.plot(i,areaAPE[i],'+')
 fig = plt.figure()
 plt.rcParams['figure.figsize'] = (15.0, 15.0)
-plt.subplot(2,1,1)
+plt.subplot(3,1,1)
 plt.plot( np.arange(nt), areaAPE), plt.ylabel('areaAPE')
-plt.subplot(2,1,2)
+plt.subplot(3,1,2)
 plt.plot( np.arange(nt), area), plt.ylabel('area')
+plt.subplot(3,1,3)
+plt.plot( np.arange(nt), sumC), plt.ylabel('C')
 plt.savefig(month+'APE.png')
 plt.title(month+ ' APE')
 #plt.show()
