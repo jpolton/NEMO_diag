@@ -282,17 +282,23 @@ def masked_sum(ind,APE0,mask_bathy,dx2):
 	  or 'advKE' in var_lst[ind] \
 	  or 'prodKE' in var_lst[ind] \
 	  or 'sum' in var_lst[ind]: # No APE mask
-		print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind],      np.nansum( dx2*1E-6*( ma.masked_where(mask_bathy == 0, np.sum(var_arr[ind][:,:,:],axis=0))).flatten() ))
-		print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind]+'>0', np.nansum( dx2*1E-6*( ma.masked_where(mask_bathy == 0, 0.5*np.sum(+np.abs(var_arr[ind])+var_arr[ind][:,:,:],axis=0))).flatten() ))
-		print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind]+'<0', np.nansum( dx2*1E-6*( ma.masked_where(mask_bathy == 0, 0.5*np.sum(-np.abs(var_arr[ind])+var_arr[ind][:,:,:],axis=0))).flatten() ))
+	    tot = np.nansum( dx2*1E-6*( ma.masked_where(mask_bathy == 0, np.sum(var_arr[ind][:,:,:],axis=0))).flatten() )
+		pos = np.nansum( dx2*1E-6*( ma.masked_where(mask_bathy == 0, 0.5*np.sum(+np.abs(var_arr[ind])+var_arr[ind][:,:,:],axis=0))).flatten() )
+		neg = np.nansum( dx2*1E-6*( ma.masked_where(mask_bathy == 0, 0.5*np.sum(-np.abs(var_arr[ind])+var_arr[ind][:,:,:],axis=0))).flatten() )
+		print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind],  tot )
+		print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind]+'>0', pos)
+		print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind]+'<0', neg)
 	elif 'Xugradpc' in var_lst[ind] \
 	  or 'XC_bt' in var_lst[ind]:  # APE mask
-		print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind],      np.nansum( dx2*1E-6*ma.masked_where(np.nansum(APEonH,axis=0)<APE0, ma.masked_where(mask_bathy == 0, np.sum(var_arr[ind][:,:,:],axis=0))).flatten() ))
-		print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind]+'>0', np.nansum( dx2*1E-6*ma.masked_where(np.nansum(APEonH,axis=0)<APE0, ma.masked_where(mask_bathy == 0, 0.5*np.sum(+np.abs(var_arr[ind])+var_arr[ind][:,:,:],axis=0))).flatten() ))
-		print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind]+'<0', np.nansum( dx2*1E-6*ma.masked_where(np.nansum(APEonH,axis=0)<APE0, ma.masked_where(mask_bathy == 0, 0.5*np.sum(-np.abs(var_arr[ind])+var_arr[ind][:,:,:],axis=0))).flatten() ))
+	  	tot = np.nansum( dx2*1E-6*ma.masked_where(np.nansum(APEonH,axis=0)<APE0, ma.masked_where(mask_bathy == 0, np.sum(var_arr[ind][:,:,:],axis=0))).flatten() )
+		pos = np.nansum( dx2*1E-6*ma.masked_where(np.nansum(APEonH,axis=0)<APE0, ma.masked_where(mask_bathy == 0, 0.5*np.sum(+np.abs(var_arr[ind])+var_arr[ind][:,:,:],axis=0))).flatten() )
+		neg = np.nansum( dx2*1E-6*ma.masked_where(np.nansum(APEonH,axis=0)<APE0, ma.masked_where(mask_bathy == 0, 0.5*np.sum(-np.abs(var_arr[ind])+var_arr[ind][:,:,:],axis=0))).flatten() )
+		print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind],      tot )
+		print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind]+'>0', pos )
+		print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind]+'<0', neg )
 	else:
 		print 'Not expecting that variable: ' + var_lst[ind] + '. Check and try again.'
-	return
+	return [tot, pos, neg]
 
 def define_masks(APE0=0,region='Whole'):
 	import numpy.ma as ma # masks
@@ -346,13 +352,31 @@ def compute_budget(region='Whole'):
 	print 'SUM: APE = {:06.2e} MJ'.format(              dx2*1E-6*np.nansum( ma.masked_where(mask_bathy == 0, np.nansum(APE,axis=0)).flatten() ))
 	#print 'Following are masked with depth averaged APE < '+str(APE0)+ ' J/m3'
 	for ind in range(len(var_arr)):
-		masked_sum(ind,APE0,mask_bathy,dx2)
+		[tot, pos, neg] = masked_sum(ind,APE0,mask_bathy,dx2)
 	#    print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind], np.nansum( dx2*1E-6*ma.masked_where(np.nansum(APE,axis=0)<APE0, ma.masked_where(mask_bathy == 0, np.sum(var_arr[ind][:,:,:],axis=0))).flatten() ))
 	#    print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind]+'>0', np.nansum( dx2*1E-6*ma.masked_where(np.nansum(APE,axis=0)<APE0, ma.masked_where(mask_bathy == 0, 0.5*np.sum(+np.abs(var_arr[ind])+var_arr[ind][:,:,:],axis=0))).flatten() ))
 	#    print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind]+'<0', np.nansum( dx2*1E-6*ma.masked_where(np.nansum(APE,axis=0)<APE0, ma.masked_where(mask_bathy == 0, 0.5*np.sum(-np.abs(var_arr[ind])+var_arr[ind][:,:,:],axis=0))).flatten() ))
 	#print 'APE masked total dissipation = {:06.2e} MW'.format(     dx2*1E-6*np.nansum( ma.masked_where(np.nansum(APE,axis=0)<APE0, ma.masked_where(mask_bathy == 0, minteps)).flatten() ))
 
 	return
+
+
+def pickle_me():
+
+	# Pickle variables
+	import pickle
+
+	with open('objs.pkl', 'w') as f:  # Python 3: open(..., 'wb')
+	    pickle.dump([var_arr_a, nav_lon_grid_T, nav_lat_grid_T], f)
+	    #pickle.dump(var_arr_a, f)
+
+	# Recover variables: (Note minteps wasn't size nh,ny,nx befrore)
+	f = open('objs.pkl', 'rb')
+	#[minteps_deep,   ugradp_bt,  D,        C_bt,      ugradp_bc,   advKE   , prodKE,    varsum_a] = pickle.load(f)
+	[[minteps_deep,   ugradp_bt,  D,        C_bt,      ugradp_bc,   advKE   , prodKE,    varsum_a], nav_lon_grid_T, nav_lat_grid_T] = pickle.load(f)
+	f.close()
+
+	return [minteps_deep,   ugradp_bt,  D,        C_bt,      ugradp_bc,   advKE   , prodKE,    varsum_a, nav_lon_grid_T, nav_lat_grid_T]
 
 
 ##################################################################################
@@ -526,278 +550,6 @@ if __name__ == '__main__':
 	plt.rcParams['figure.figsize'] = (15.0, 15.0)
 
 
-	## Plot Barotropic fluxes for different species.
-	################################################
-
-	if(0):
-
-		## Plot C_bt
-		######################
-
-		constit = 'M2'
-		iconst = constit_list.index(constit)
-
-
-		fig = plt.figure()
-		plt.rcParams['figure.figsize'] = (15.0, 15.0)
-
-
-		#ax = fig.add_subplot(221)
-		#clim = [-10**-4,10**-4]
-		#[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, C_tot[iconst,:,:], clim, 'C_tot', logthresh=10 )
-		#plt.title(constit+': Barotropic to baroclinic tidal energy conversion rate, C_tot, W/m^2')
-		#plt.xlabel('long'); plt.ylabel('lat')
-
-		ax = fig.add_subplot(222)
-		clim = [-10**1,10**1]
-		[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, C_bt[iconst,:,:], clim, 'C_bt', logthresh=3 )
-		plt.title(constit+': C_bt, W/m^2')
-		plt.xlabel('long'); plt.ylabel('lat')
-
-		#ax = fig.add_subplot(223)
-		#clim = [-10**-3,10**-3]
-		#[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, C_tot[iconst,:,:], clim, 'C_tot', logthresh=7 )
-		#plt.title(constit+': Barotropic to baroclinic tidal energy conversion rate, C_tot, W/m^2')
-		#plt.xlabel('long'); plt.ylabel('lat')
-		#plt.xlim(-13, -3)
-		#plt.ylim(46, 53)
-
-		ax = fig.add_subplot(224)
-		clim = [-10**1,10**1]
-		[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, C_bt[iconst,:,:], clim, 'C_bt', logthresh=3 )
-		plt.title(constit+': C_bt, W/m^2')
-		plt.xlabel('long'); plt.ylabel('lat')
-		plt.xlim(-13, -3)
-		plt.ylim(46, 53)
-
-		## Save output
-		fname = dstdir +'internaltideharmonics_NEMO_C_bt' + constit + '_' + config + '.png'
-		plt.savefig(fname)
-		print fname
-		plt.close(fig)
-
-		## Plot Barotropic fluxes for different species. Whole domain
-		#############################################################
-
-		fig = plt.figure()
-		plt.rcParams['figure.figsize'] = (7.0, 7.0)
-
-		fig = plt.figure()
-		plt.rcParams['figure.figsize'] = (15.0, 15.0)
-
-		clim = [-10**1,10**1]
-		[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, minteps_deep, clim, 'minteps_deep', logthresh=3 )
-		plt.title('Beneath pycnocline time mean depth int epsilon25h [W/m^2]')
-		plt.xlabel('long'); plt.ylabel('lat')
-
-		## Save output
-		fname = dstdir + 'internaltideharmonics_NEMO_' + 'deepinteps_' + config + '.png'
-		plt.savefig(fname)
-		print fname
-		plt.close(fig)
-
-
-		## Plot Harmonic components Budget. Whole domain
-		###################
-		fig = plt.figure()
-		plt.rcParams['figure.figsize'] = (15.0, 7.0)
-
-		## M2
-		iconst = constit_list.index('M2')
-		budget_term_logplot(421, [-10**1,10**1], divF_bt, iconst,constit_list, 'divF_bt', 3)
-		budget_term_logplot(423, [-10**1,10**1], D, iconst,constit_list, 'D', 3)
-		budget_term_logplot(425, [-10**1,10**1], C_bt, iconst,constit_list, 'C_bt', 3)
-		budget_term_logplot(427, [-10**1,10**1], divF_bc, iconst,constit_list, 'divF_bc', 3)
-
-		## S2
-		iconst = constit_list.index('S2')
-		budget_term_logplot(422, [-10**1,10**1], divF_bt, iconst,constit_list, 'divF_bt', 3)
-		budget_term_logplot(424, [-10**1,10**1], D, iconst,constit_list, 'D', 3)
-		budget_term_logplot(426, [-10**1,10**1], C_bt, iconst,constit_list, 'C_bt', 3)
-		budget_term_logplot(428, [-10**1,10**1], divF_bc, iconst,constit_list, 'divF_bc', 3)
-
-		## Save output
-		fname = dstdir +'internaltideharmonics_NEMO_budget_terms_' + config + '.png'
-		plt.savefig(fname)
-		print fname
-		plt.close(fig)
-
-
-		## K2: Plot budget by components K2
-		fig = plt.figure()
-		plt.rcParams['figure.figsize'] = (15.0, 15.0)
-		constit = 'K2'
-		iconst = constit_list.index(constit)
-		budget_term_logplot(221, [-10**1,10**1], divF_bt, iconst,constit_list, 'divF_bt', 3)
-		budget_term_logplot(222, [-10**1,10**1], D, iconst,constit_list, 'D', 3)
-		budget_term_logplot(223, [-10**1,10**1], C_bt, iconst,constit_list, 'C_bt', 3)
-		budget_term_logplot(224, [-10**1,10**1], divF_bc, iconst,constit_list, 'divF_bc', 3)
-		## Save output
-		fname = dstdir +'internaltideharmonics_NEMO_budget_terms_' + constit + '.png'
-		plt.savefig(fname)
-		print fname
-		plt.close(fig)
-
-
-		## Plot Harmonic components Budget. Celtic Sea
-		###################
-
-
-		fig = plt.figure()
-		plt.rcParams['figure.figsize'] = (7.0, 15.0)
-
-		maskval = 1E-2 #1 # APEonH value [J/m^2] to mask fields
-		## M2
-		iconst = constit_list.index('M2')
-		celt_budget_term_logplot(421,maskval, [-10**1,10**1], divF_bt, iconst,constit_list, 'divF_bt', 3)
-		celt_budget_term_logplot(423,maskval, [-10**1,10**1], D, iconst,constit_list, 'D', 3)
-		celt_budget_term_logplot(425,maskval, [-10**1,10**1], C_bt, iconst,constit_list, 'C_bt', 3)
-		lons4 = [-10, 0]
-		lats4 = [47.5, 51]
-		plt.plot(lons4, lats4 ,'k')
-		celt_budget_term_logplot(427,maskval, [-10**1,10**1], divF_bc, iconst,constit_list, 'divF_bc', 3)
-
-		## S2
-		iconst = constit_list.index('S2')
-		celt_budget_term_logplot(422,maskval, [-10**1,10**1], divF_bt, iconst,constit_list, 'divF_bt', 3)
-		celt_budget_term_logplot(424,maskval, [-10**1,10**1], D, iconst,constit_list, 'D', 3)
-		celt_budget_term_logplot(426,maskval, [-10**1,10**1], C_bt, iconst,constit_list, 'C_bt', 3)
-		celt_budget_term_logplot(428,maskval, [-10**1,10**1], divF_bc, iconst,constit_list, 'divF_bc', 3)
-		## Save output
-		fname = dstdir +'internaltideharmonics_NEMO_budget_terms_celtic' + config + '.png'
-		plt.savefig(fname)
-		print fname
-		plt.close(fig)
-
-
-		## Plot Harmonic totals Budget. Whole domain
-		##################################
-
-		fig = plt.figure()
-		plt.rcParams['figure.figsize'] = (15.0, 7.0 )
-
-		## M2
-		iconst = constit_list.index('M2')
-		budget_term_logplot(121, [-10**1,10**1], divF_bc+divF_bt+D+C_bt, iconst,constit_list, 'sum: divF_bc+divF_bt+D+C_bt', 3)
-
-		## S2
-		iconst = constit_list.index('S2')
-		budget_term_logplot(122, [-10**1,10**1], divF_bc+divF_bt+D+C_bt, iconst,constit_list, 'sum: divF_bc+divF_bt+D+C_bt', 3)
-
-		## Save output
-		fname = dstdir +'internaltideharmonics_NEMO_budget_sum_' + config + '.png'
-		plt.savefig(fname)
-		print fname
-		plt.close(fig)
-
-
-		## Plot Total Budget: Sum
-		###################
-		fig = plt.figure()
-		plt.rcParams['figure.figsize'] = (20.0, 20.0)
-
-
-		ax = fig.add_subplot(221)
-		clim = [-10**1,10**1]
-		[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, np.sum(D+C_bt+ugradp_bt+ugradp_bc,axis=0), clim, 'D+C_tot+ugradp_bt+ugradp_bc', logthresh=3 )
-		#[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, np.sum(D+C_bt+divF_bt+divF_bc,axis=0), clim, 'D+C_tot+divF_bt+divF_bc', logthresh=3 )
-		plt.title('all: D+C_bt+divF_bt+divF_bc, W/m^2')
-		plt.xlabel('long'); plt.ylabel('lat')
-
-		ax = fig.add_subplot(222)
-		clim = [-10**1,10**1]
-		[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, minteps_deep, clim, 'minteps_deep', logthresh=3 )
-		plt.title('Beneath pycnocline time mean depth int epsilon25h [W/m^2]')
-		plt.xlabel('long'); plt.ylabel('lat')
-
-		ax = fig.add_subplot(223)
-		clim = [-10**1,10**1]
-		[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, np.sum(D+C_bt+ugradp_bt+ugradp_bc,axis=0), clim, 'D+C_tot+ugradp_bt+ugradp_bc', logthresh=3 )
-		#[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, np.sum(D+C_bt+divF_bt+divF_bc,axis=0), clim, 'D+C_tot+divF_bt+divF_bc', logthresh=3 )
-		plt.title('all: D+C_bt+divF_bt+divF_bc, W/m^2')
-		plt.xlabel('long'); plt.ylabel('lat')
-		plt.xlim(-13, -3)
-		plt.ylim(46, 53)
-
-		ax = fig.add_subplot(224)
-		clim = [-10**1,10**1]
-		[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, minteps_deep, clim, 'minteps_deep', logthresh=3 )
-		plt.title('Beneath pycnocline time mean depth int epsilon25h [W/m^2]')
-		plt.xlabel('long'); plt.ylabel('lat')
-		plt.xlim(-13, -3)
-		plt.ylim(46, 53)
-
-
-		## Save output
-		fname = dstdir +'internaltideharmonics_NEMO_budget' + config + '.png'
-		plt.savefig(fname)
-		print fname
-		plt.close(fig)
-		###############
-
-
-		## Plot Total Budget: Sum
-		###################
-		fig = plt.figure()
-		plt.rcParams['figure.figsize'] = (20.0, 20.0)
-		for iconst in range(9):
-			budget_term_logplot(331+iconst, [-10**1,10**1], divF_bc+divF_bt+D+C_bt, iconst,constit_list, 'divF_bc+divF_bt+D+C_bt', 3)
-		## Save output
-		fname = dstdir +'internaltideharmonics_NEMO_sums_by_component.png'
-		plt.savefig(fname)
-		print fname
-		plt.close(fig)
-
-
-	## Plot harmonic totals for each components. Whole domain
-	#########################################################
-
-
-	if(0): # DELETE ME
-		## Plot Whole domain
-		####################
-
-		fig = plt.figure()
-		plt.rcParams['figure.figsize'] = (20.0, 20.0)
-
-		for ind in range(len(var_arr)):
-			print var_lst[ind], np.nanmean(var_arr[ind].flatten())
-			ax = fig.add_subplot(331+ind)
-			clim = [-10**1,10**1]
-			[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, np.sum(var_arr[ind],axis=0), clim, var_lst[ind], logthresh=3 )
-			plt.xlabel('long'); plt.ylabel('lat')
-			plt.contour( nav_lon_grid_T, nav_lat_grid_T, H, [0,200], colors='k' )
-
-		## Save output
-		fname = dstdir +'internaltideharmonics_NEMO_harmtotals_all_components.png'
-		plt.savefig(fname)
-		print fname
-		plt.close(fig)
-
-
-		## Plot Celtic Zoom
-		###################
-
-		fig = plt.figure()
-		plt.rcParams['figure.figsize'] = (20.0, 20.0)
-
-		for ind in range(len(var_arr)):
-			print var_lst[ind], np.nanmean(var_arr[ind].flatten())
-			ax = fig.add_subplot(331+ind)
-			clim = [-10**1,10**1]
-			[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, np.sum(var_arr[ind],axis=0), clim, var_lst[ind], logthresh=3 )
-			plt.xlabel('long'); plt.ylabel('lat')
-			plt.xlim(-13, -0)
-			plt.ylim(46, 53)
-			plt.contour( nav_lon_grid_T, nav_lat_grid_T, H, [0,200], colors='k' )
-
-		## Save output
-		fname = dstdir +'internaltideharmonics_NEMO_harmtotals_all_components_Celtic.png'
-		plt.savefig(fname)
-		print fname
-		plt.close(fig)
-
-
 
 	################################################
 	################################################
@@ -816,26 +568,12 @@ if __name__ == '__main__':
 	#plot_components_and_total_by_harmonic_band(region='Whole')
 	#plot_components_and_total_by_harmonic_band(region='Celtic')
 
+	## Compute Area integral budgets
 	compute_budget(region='Whole')
 	#compute_budget(region='Celtic')
 
-
-
-
-
-
-
-
+	## Pickle variables
 	if(0):
-		# Pickle variables
-		import pickle
-
-		with open('objs.pkl', 'w') as f:  # Python 3: open(..., 'wb')
-		    pickle.dump([var_arr_a, nav_lon_grid_T, nav_lat_grid_T], f)
-		    #pickle.dump(var_arr_a, f)
-
-		# Recover variables: (Note minteps wasn't size nh,ny,nx befrore)
-		f = open('objs.pkl', 'rb')
-		#[minteps_deep,   ugradp_bt,  D,        C_bt,      ugradp_bc,   advKE   , prodKE,    varsum_a] = pickle.load(f)
-		[[minteps_deep,   ugradp_bt,  D,        C_bt,      ugradp_bc,   advKE   , prodKE,    varsum_a], nav_lon_grid_T, nav_lat_grid_T] = pickle.load(f)
-		f.close()
+		[minteps_deep,  ugradp_bt,  D,   C_bt,  ugradp_bc,   \
+					advKE   ,   prodKE,    varsum_a, \
+					nav_lon_grid_T, nav_lat_grid_T = pickle_me()
