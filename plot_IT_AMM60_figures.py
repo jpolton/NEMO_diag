@@ -17,10 +17,14 @@ import numpy.ma as ma # masks
 ##################################################################################
 ## Plot the div F as u.gradp terms
 def budget_term_logplot(panel, clim, var, iconst, constit_list, label, logth):
+	mask_bathy = define_masks(APE0=0,region='Whole')
+	
 	ax = fig.add_subplot(panel)
-	[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, var[iconst,:,:], clim, label, logthresh=logth )
+	[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, np.ma.masked_where(mask_bathy==0, var[iconst,:,:]), \
+			clim, label, logthresh=logth )
 	plt.title(constit_list[iconst]+':'+label+' W/m^2')
-	plt.contour( nav_lon_grid_T, nav_lat_grid_T, H, levels=[200], colors='k')
+	plt.contour( nav_lon_grid_T, nav_lat_grid_T, np.ma.masked_where(mask_bathy==0, H), levels=[0,200], colors='k')
+	plt.xlim(-13,13), plt.ylim(43,63)
 	#plt.xlabel('long'); plt.ylabel('lat')
 	return
 
@@ -42,6 +46,8 @@ def plot_divterms(region='Whole'):
 	## M2
 	constit = 'M2'
 	iconst = constit_list.index(constit)
+        
+	
 
 	fig = plt.figure()
 	plt.rcParams['figure.figsize'] = (15.0, 15.0)
@@ -52,62 +58,80 @@ def plot_divterms(region='Whole'):
 	plt.close(fig)
 
 
-	fig = plt.figure()
+        fig = plt.figure()
 	plt.rcParams['figure.figsize'] = (15.0, 15.0)
 	budget_term_logplot(111, [-10**1,10**1], ugradp_bc, iconst,constit_list, 'u.gradp_bc', 3)
 	## Save output
 	fname = dstdir +'internaltideharmonics_NEMO_ugradpbc_' + constit + '_' + config + '.png'
 	plt.savefig(fname)
 	plt.close(fig)
-
-
-	fig = plt.figure()
-	plt.rcParams['figure.figsize'] = (15.0, 15.0)
-	budget_term_logplot(111, [-10**1,10**1], divF_bt, iconst,constit_list, 'divF_bt', 3)
-	## Save output
-	fname = dstdir +'internaltideharmonics_NEMO_divFbt_' + constit + '_' + config + '.png'
-	plt.savefig(fname)
-	plt.close(fig)
-
+	
 
 	fig = plt.figure()
 	plt.rcParams['figure.figsize'] = (15.0, 15.0)
-	budget_term_logplot(111, [-10**1,10**1], divF_bc, iconst,constit_list, 'divF_bc', 3)
+	budget_term_logplot(111, [-10**1,10**1], prodKE, iconst,constit_list, 'prodKE', 3)
 	## Save output
-	fname = dstdir +'internaltideharmonics_NEMO_divFbc_' + constit + '_' + config + '.png'
+	fname = dstdir +'internaltideharmonics_NEMO_prodKE_' + constit + '_' + config + '.png'
+	plt.savefig(fname)
+	plt.close(fig)
+	
+	fig = plt.figure()
+	plt.rcParams['figure.figsize'] = (15.0, 15.0)
+	budget_term_logplot(111, [-10**1,10**1], advKE, iconst,constit_list, 'advKE', 3)
+	## Save output
+	fname = dstdir +'internaltideharmonics_NEMO_advKE_' + constit + '_' + config + '.png'
 	plt.savefig(fname)
 	plt.close(fig)
 
-
-	## Plot the difference between u.grad p_bt and divF_bt
-	fig = plt.figure()
-	plt.rcParams['figure.figsize'] = (15.0, 7.0)
-
-	ax = fig.add_subplot(121)
-	clim = [-10**1,10**1]
-	[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, divF_bt[iconst,:,:]-ugradp_bt[iconst,:,:], \
-			clim, 'divF-u.gradp bt', logthresh=3 )
-	plt.xlabel('long'); plt.ylabel('lat')
-	plt.contour( nav_lon_grid_T, nav_lat_grid_T, H, [0,200], colors='k' )
-
-	ax = fig.add_subplot(122)
-	clim = [-10**1,10**1]
-	[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, divF_bc[iconst,:,:]-ugradp_bc[iconst,:,:], \
-			clim, 'divF-u.gradp bc', logthresh=3 )
-	plt.xlabel('long'); plt.ylabel('lat')
-	plt.contour( nav_lon_grid_T, nav_lat_grid_T, H, [0,200], colors='k' )
 
 	if(0):
 		fig = plt.figure()
 		plt.rcParams['figure.figsize'] = (15.0, 15.0)
-		budget_term_logplot(121, [-10**1,10**1], divF_bt-ugradp_bt, iconst,constit_list, 'divF-u.gradp bt', 3)
-		budget_term_logplot(122, [-10**1,10**1], divF_bc-ugradp_bc, iconst,constit_list, 'divF-u.gradp bc', 3)
-	## Save output
-	fname = dstdir +'internaltideharmonics_NEMO_diff_divF_' + constit + '_' \
-	+ '_' + region + config + '.png'
-	plt.savefig(fname)
-	print fname
-	plt.close(fig)
+		budget_term_logplot(111, [-10**1,10**1], divF_bt, iconst,constit_list, 'divF_bt', 3)
+		## Save output
+		fname = dstdir +'internaltideharmonics_NEMO_divFbt_' + constit + '_' + config + '.png'
+		plt.savefig(fname)
+		plt.close(fig)
+
+
+		fig = plt.figure()
+		plt.rcParams['figure.figsize'] = (15.0, 15.0)
+		budget_term_logplot(111, [-10**1,10**1], divF_bc, iconst,constit_list, 'divF_bc', 3)
+		## Save output
+		fname = dstdir +'internaltideharmonics_NEMO_divFbc_' + constit + '_' + config + '.png'
+		plt.savefig(fname)
+		plt.close(fig)
+
+
+		## Plot the difference between u.grad p_bt and divF_bt
+		fig = plt.figure()
+		plt.rcParams['figure.figsize'] = (15.0, 7.0)
+
+		ax = fig.add_subplot(121)
+		clim = [-10**1,10**1]
+		[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, divF_bt[iconst,:,:]-ugradp_bt[iconst,:,:], \
+				clim, 'divF-u.gradp bt', logthresh=3 )
+		plt.xlabel('long'); plt.ylabel('lat')
+		plt.contour( nav_lon_grid_T, nav_lat_grid_T, H, [0,200], colors='k' )
+
+		ax = fig.add_subplot(122)
+		clim = [-10**1,10**1]
+		[img,cb] = ITh.contourf_symlog( nav_lon_grid_T, nav_lat_grid_T, divF_bc[iconst,:,:]-ugradp_bc[iconst,:,:], \
+				clim, 'divF-u.gradp bc', logthresh=3 )
+		plt.xlabel('long'); plt.ylabel('lat')
+		plt.contour( nav_lon_grid_T, nav_lat_grid_T, H, [0,200], colors='k' )
+
+		if(0):
+			fig = plt.figure()
+			plt.rcParams['figure.figsize'] = (15.0, 15.0)
+			budget_term_logplot(121, [-10**1,10**1], divF_bt-ugradp_bt, iconst,constit_list, 'divF-u.gradp bt', 3)
+			budget_term_logplot(122, [-10**1,10**1], divF_bc-ugradp_bc, iconst,constit_list, 'divF-u.gradp bc', 3)
+		## Save output
+		fname = dstdir +'internaltideharmonics_NEMO_diff_divF_' + constit + '_' \
+		+ '_' + region + config + '.png'
+		plt.savefig(fname)
+		print fname
+		plt.close(fig)
 
 
 	return
@@ -250,14 +274,17 @@ def plot_components_and_total_by_harmonic_band(region='Whole'):
 def masked_sum(ind,APE0,mask_bathy,dx2):
 	if 'eps' in var_lst[ind] \
 	  or 'D' in var_lst[ind] \
+	  or 'ugradpc' in var_lst[ind] \
+	  or 'C_bt' in var_lst[ind] \
+	  or 'ugradpt' in var_lst[ind] \
 	  or 'advKE' in var_lst[ind] \
 	  or 'prodKE' in var_lst[ind] \
 	  or 'sum' in var_lst[ind]: # No APE mask
 		print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind],      np.nansum( dx2*1E-6*( ma.masked_where(mask_bathy == 0, np.sum(var_arr[ind][:,:,:],axis=0))).flatten() ))
 		print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind]+'>0', np.nansum( dx2*1E-6*( ma.masked_where(mask_bathy == 0, 0.5*np.sum(+np.abs(var_arr[ind])+var_arr[ind][:,:,:],axis=0))).flatten() ))
 		print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind]+'<0', np.nansum( dx2*1E-6*( ma.masked_where(mask_bathy == 0, 0.5*np.sum(-np.abs(var_arr[ind])+var_arr[ind][:,:,:],axis=0))).flatten() ))
-	elif 'ugrad' in var_lst[ind] \
-	  or 'C_bt' in var_lst[ind]:  # APE mask
+	elif 'Xugradpc' in var_lst[ind] \
+	  or 'XC_bt' in var_lst[ind]:  # APE mask
 		print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind],      np.nansum( dx2*1E-6*ma.masked_where(np.nansum(APEonH,axis=0)<APE0, ma.masked_where(mask_bathy == 0, np.sum(var_arr[ind][:,:,:],axis=0))).flatten() ))
 		print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind]+'>0', np.nansum( dx2*1E-6*ma.masked_where(np.nansum(APEonH,axis=0)<APE0, ma.masked_where(mask_bathy == 0, 0.5*np.sum(+np.abs(var_arr[ind])+var_arr[ind][:,:,:],axis=0))).flatten() ))
 		print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind]+'<0', np.nansum( dx2*1E-6*ma.masked_where(np.nansum(APEonH,axis=0)<APE0, ma.masked_where(mask_bathy == 0, 0.5*np.sum(-np.abs(var_arr[ind])+var_arr[ind][:,:,:],axis=0))).flatten() ))
@@ -265,7 +292,7 @@ def masked_sum(ind,APE0,mask_bathy,dx2):
 		print 'Not expecting that variable: ' + var_lst[ind] + '. Check and try again.'
 	return
 
-def define_masks(APE0,region='Whole'):
+def define_masks(APE0=0,region='Whole'):
 	import numpy.ma as ma # masks
 
 
@@ -281,7 +308,20 @@ def define_masks(APE0,region='Whole'):
 			* np.array(H < 200, dtype=int) * np.array(H > 10, dtype=int)
 
 	elif region=='Whole':
-		mask_bathy = ...
+	# Extra bits for Faeros; S. Bay of Biscay; two bits for the East of the Norwegian Trench
+		mask_bathy = np.array(nav_lon_grid_T > -13., dtype=int)  \
+			* np.array(nav_lat_grid_T > 43.5 , dtype=int) * np.array(nav_lat_grid_T < 62 , dtype=int) \
+			* np.array(H < 200, dtype=int) * np.array(H > 10, dtype=int) \
+			* np.array(nav_lat_grid_T - 0.5*nav_lon_grid_T < 60 - 0.5*(-6), dtype=int) \
+			* np.array(nav_lat_grid_T + 0.1*nav_lon_grid_T > 43.6 + 0.1*(-1.8), dtype=int) \
+			* (~np.array((nav_lat_grid_T - 0.5*nav_lon_grid_T < 43.68 - 0.5*(-1.6)) \
+			  & (nav_lat_grid_T < 43.68), dtype=bool)).astype(int)\
+			* (~np.array((nav_lat_grid_T > 58.4) & (nav_lon_grid_T > 4) & (nav_lon_grid_T < 9.8), dtype=bool)).astype(int) \
+			* (~np.array((nav_lat_grid_T < 58.4) & (nav_lat_grid_T > 57.8) \
+			  & (nav_lon_grid_T > 4 ) & (nav_lon_grid_T <= 7 )    \
+			  & (nav_lat_grid_T + 0.2*nav_lon_grid_T > 58.4 + 0.2*4 ), dtype=bool)).astype(int) \
+			* (~np.array((nav_lat_grid_T - 0.25*nav_lon_grid_T > 57.9 - 0.25*8 ) \
+			  & (nav_lon_grid_T > 7) & (nav_lon_grid_T < 9.8) , dtype=bool)).astype(int)
 
 	#mask_APE = np.array( np.nansum(APEonH,axis=APEonH.shape.index(nh)) < APE0, dtype=int )
 	return mask_bathy #, mask_APE
@@ -302,7 +342,7 @@ def compute_budget(region='Whole'):
 	print 'pycnocline dissipation = {:06.2e} MW'.format(dx2*1E-6*np.nansum( ma.masked_where(mask_bathy == 0, meps_pyc).flatten() ))
 	print 'total dissipation = {:06.2e} MW'.format(     dx2*1E-6*np.nansum( ma.masked_where(mask_bathy == 0, minteps).flatten() ))
 	print 'SUM: APE = {:06.2e} MJ'.format(              dx2*1E-6*np.nansum( ma.masked_where(mask_bathy == 0, np.nansum(APE,axis=0)).flatten() ))
-	print 'Following are masked with depth averaged APE < '+str(APE0)+ ' J/m3'
+	#print 'Following are masked with depth averaged APE < '+str(APE0)+ ' J/m3'
 	for ind in range(len(var_arr)):
 		masked_sum(ind,APE0,mask_bathy,dx2)
 	#    print 'SUM: {} = {:06.2e} MW'.format(var_lst[ind], np.nansum( dx2*1E-6*ma.masked_where(np.nansum(APE,axis=0)<APE0, ma.masked_where(mask_bathy == 0, np.sum(var_arr[ind][:,:,:],axis=0))).flatten() ))
@@ -755,7 +795,7 @@ if __name__ == '__main__':
 	#plot_APE_by_harmonic_bands()
 
 	## Plot div F as u.grad p terms, and differences
-	#plot_divterms(region='Whole')
+	plot_divterms(region='Whole')
 
 	## Plot components and total by harmonic band: Whole domain
 	#plot_components_and_total_by_harmonic_band(region='Whole')
