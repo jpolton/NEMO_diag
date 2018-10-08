@@ -53,7 +53,7 @@ else:
 
 #################### USR PARAMETERS ##########################
 
-levs     = np.arange(0,2.5+0.1,0.1)
+levs     = np.arange(0,4.0+0.1,0.1)
 
 print len(sys.argv)
 print str(sys.argv)
@@ -83,7 +83,7 @@ if source == 'AMM60':
 	lat_var = 'nav_lat_grid_T'
 
 if source == 'MASSMO5':
-	dirname = rootdir+'/scratch-1/jelt/tmp/'
+	dirname = rootdir+'/scratch/jelt/tmp/'
 	#dirname = rootdir+'/work/n01/n01/jelt/MASSMO5_surge/dev_r8814_surge_modelling_Nemo4/CONFIG/MASSMO5_surge/EXP00/'
 	filename = 'MASSMO5_surge_576001_1267200_harmonic_grid_T.nc'
 	lon_var = 'nav_lon'
@@ -118,6 +118,7 @@ def plot_amp_pha( pj, X, Y, amp, pha, levs, label) :
     cset  = pj.pcolormesh( xx, yy, amp, cmap = cmap0 )
 #    cset  = pj.contourf( xx, yy, amp, cmap = cmap0 )
 #    cset  = pj.contourf( xx, yy, amp, levels=levs, cmap = cmap0 )
+    cset2  = pj.contour( xx, yy, amp, levels=np.arange(levs[0],levs[-1],0.5), colors='k' )
     cset.set_clim([levs[0],levs[-1]])
 
     ## contour phase
@@ -133,7 +134,7 @@ def plot_amp_pha( pj, X, Y, amp, pha, levs, label) :
 
     ## Colorbar
     cax  = plt.axes([0.2, 0.08, 0.6, 0.02])
-    cbar = plt.colorbar( cset, cax=cax, orientation='horizontal', extend='both'  )
+    cbar = plt.colorbar( cset, cax=cax, orientation='horizontal', extend='max'  )
     cbar.ax.tick_params( labelsize=12 )
 
 ###################### LOAD DATA ############################
