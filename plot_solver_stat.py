@@ -8,8 +8,10 @@ import itertools
 ################################################################################
 
 #dir = '/Users/jeff/Desktop/'
-dir = ''
-config = 'SEAsia'
+#dir = '/work/n01/n01/jelt/SEAsia/trunk_NEMOGCM_r8395/CONFIG/SEAsia/EXP_openbcs/'
+#config = 'SEAsia'
+dir = '/work/n01/n01/ashbre/INDIAN_OCEAN_AUTO/RUN_DIRECTORY/INDIAN_OCEAN_AUTO/'
+config = 'BoBEAS'
 
 data = pd.read_table(dir + 'solver.stat', sep=r"\s+", skipinitialspace=True,  header=None)
 nrow,ncol = data.shape
