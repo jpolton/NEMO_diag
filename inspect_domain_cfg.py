@@ -48,7 +48,8 @@ elif 'livljobs' in hostname.lower() and username in ['jeff','jelt']:
 
 elif 'archer' in hostname.lower() or 'eslogin' in hostname.lower():
     rootdir = ''
-    dirname = '/work/n01/n01/jelt/SEAsia/trunk_NEMOGCM_r8395/TOOLS/DOMAINcfg/'
+    #dirname = '/work/n01/n01/jelt/SEAsia/trunk_NEMOGCM_r8395/TOOLS/DOMAINcfg/'
+    dirname = '/work/n01/n01/jelt/BoBEAS/INPUTS/'
 
 else:
     rootdir = ''
@@ -144,7 +145,9 @@ lab1 = 'Malay to S.China Sea'
 X1 = [95,115]
 Y1 = [-5,10]
 
-
+lab1 = 'India to Andaman Shelf'
+X1 = [80,100]
+Y1 = [13,13]
 
 
 ## Define section A:
@@ -185,7 +188,7 @@ thing = { 'level number' : var2_sec1 }
 fig = plt.figure()
 plt.rcParams['figure.figsize'] = (15.0, 15.0)
 
-ax = fig.add_subplot(221)
+ax = fig.add_subplot(111)
 plt.contour(lon_sec1, np.log10(dep_sec1), var2_sec1, levels=[0,nn_sig_lev])
 
 plt.pcolormesh(lon_sec1, np.log10(dep_sec1), np.squeeze(thing.values()), cmap=cmap)
@@ -200,24 +203,25 @@ plt.xlabel('latitude')
 plt.colorbar()
 plt.legend( loc='lower right' )
 
-## Add plan view
-ax = fig.add_subplot(222)
-#plt.pcolormesh(nav_lon, nav_lat, np.log10(H), cmap=cmap)
-plt.pcolormesh( np.log10(H), cmap=cmap)
-#plt.title(thing.keys())
-plt.xlim([680,684])
-plt.ylim([550,554])
-plt.xlabel('latitude')
-plt.ylabel('longitude')
-#plt.clim([-6,-3])
-plt.colorbar()
+if(0):
+	## Add plan view
+	ax = fig.add_subplot(222)
+	#plt.pcolormesh(nav_lon, nav_lat, np.log10(H), cmap=cmap)
+	plt.pcolormesh( np.log10(H), cmap=cmap)
+	#plt.title(thing.keys())
+	plt.xlim([680,684])
+	plt.ylim([550,554])
+	plt.xlabel('latitude')
+	plt.ylabel('longitude')
+	#plt.clim([-6,-3])
+	plt.colorbar()
 
-ax = fig.add_subplot(223)
-plt.pcolormesh( H, cmap=cmap)
-plt.xlim([680,684])
-plt.ylim([550,554])
-plt.clim([1000,5000])
-plt.colorbar()
+	ax = fig.add_subplot(223)
+	plt.pcolormesh( H, cmap=cmap)
+	plt.xlim([680,684])
+	plt.ylim([550,554])
+	plt.clim([1000,5000])
+	plt.colorbar()
 
 
 ## Save output
