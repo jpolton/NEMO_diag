@@ -23,6 +23,7 @@ Load in some existing output SEAsia_1h_20000101_20000130_SSH.nc and plot it and 
 """
 
 from netCDF4 import Dataset
+from netCDF4 import MFDataset
 import numpy as np
 import matplotlib.pyplot as plt  # plotting
 import sys
@@ -52,18 +53,27 @@ variable = 'sosheig'
 
 # Fix for SEAsia
 #dirname = '/work/n01/n01/jelt/SEAsia/trunk_NEMOGCM_r8395/CONFIG/SEAsia/EXP_openbcs/'
-dirname = '/work/n01/n01/jelt/SEAsia/trunk_NEMOGCM_r8395/CONFIG/SEAsia/EXP_fullocean/'
-filename = 'SEAsia_1d_19791101_19791130_grid_T.nc'
+dirname = '/work/n01/n01/jelt/SEAsia/EXP_fullforcing/'
+filename1 = 'SEAsia_1d_19600301_19600429_grid_T.nc'
+filename2 = 'SEAsia_1d_19600430_19600827_grid_T.nc'
+filename3 = 'SEAsia_1d_19600828_19601225_grid_T.nc'
+
 variable = 'sea_surface_salinity' #'zos'
 xlim = [75,135]
-ylim = [-20.,20.]
+ylim = [-20.,25.]
 levs = np.arange(20,35+1,1)
 
 ofile = 'FIGURES/SEAsia_SSS.gif'
 
 
 
-f = Dataset(dirname+filename)
+#f = Dataset(dirname+filename)
+#f = MFDataset([dirname+filename1,dirname+filename2,dirname+filename3])
+
+import xarray as xr
+f = xr.open_mfdataset([dirname+filename1,dirname+filename2,dirname+filename3])
+g = Dataset(dirname+'domain_cfg.nc')
+
 
 ## Load in data
 var = f.variables[variable][:] # (t, y, x)
@@ -75,8 +85,8 @@ time_calendar = f.variables['time_counter'].calendar
 time_units = f.variables['time_counter'].units
 
 #load lat and lon
-nav_lat = f.variables['nav_lat'][:] # (y,x)
-nav_lon = f.variables['nav_lon'][:] # (y,x)
+nav_lat = g.variables['nav_lat'][:] # (y,x)
+nav_lon = g.variables['nav_lon'][:] # (y,x)
 
 
 # Process the time data
@@ -161,8 +171,8 @@ if __name__ == '__main__':
 
     X_arr = nav_lon
     Y_arr = nav_lat
-    Y_arr[~np.isfinite(nav_lat)] = 0
-    X_arr[~np.isfinite(nav_lon)] = 0
+    #Y_arr[~np.isfinite(nav_lat)] = 0
+    #X_arr[~np.isfinite(nav_lon)] = 0
     var_arr = var[:,:,:] # Note this also has time dimension
 
     var_arr[~np.isfinite(var)] = 0

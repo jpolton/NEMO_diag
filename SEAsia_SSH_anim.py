@@ -50,15 +50,23 @@ else:
 filename = 'EA_v2_1ts_00010106_00010106_grid_T.nc'
 variable = 'sosheig'
 
+# Fix for BoBEAS
+dirname = '/work/n01/n01/ashbre/INDIAN_OCEAN_AUTO/RUN_DIRECTORY/INDIAN_OCEAN_AUTO/'
+filename = 'INDIAN_1h_20160210_20160405_SSH.nc'
+variable = 'zos'
+ofile = 'FIGURES/BoBEAS_SSH.gif'
+
 # Fix for SEAsia
-dirname = '/work/n01/n01/jelt/SEAsia/trunk_NEMOGCM_r8395/CONFIG/SEAsia/EXP_openbcs/'
-filename = 'SEAsia_1h_19791101_19791130_grid_T.nc'
+dirname = '/work/n01/n01/jelt/SEAsia/EXP_fullforcing/' #trunk_NEMOGCM_r8395/CONFIG/SEAsia/EXP_openbcs/'
+filename = 'SEAsia_1d_19600828_19601225_grid_T.nc'
 variable = 'zos'
 xlim = [75,135]
 ylim = [-20.,20.]
-levs = np.arange(-2,2+0.1,0.1)
+#levs = np.arange(-2,2+0.1,0.1)
+levs = np.arange(-1.2,1.2+0.1,0.1)
 
 ofile = 'FIGURES/SEAsia_SSH.gif'
+
 
 
 
